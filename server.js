@@ -14,7 +14,7 @@ app.use(express.json());
 app.use(express.static(__dirname));
 
 // MongoDB Connection String (usa le tue credenziali)
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://terrilegiacomo_db_user:Xm3IlXAPEG5WBNpQ@urbex-hud-db.mongodb.net/urbex-hud?retryWrites=true&w=majority';
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://terrilegiacomo_db_user:Xm3IlXAPEG5WBNpQ@urbex-hud-db.okizzoq.mongodb.net/?appName=urbex-hud-db';
 
 // Connessione a MongoDB
 mongoose.connect(MONGODB_URI, {
