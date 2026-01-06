@@ -1,7 +1,7 @@
 {
-  "name": "urbex-hud",
-  "version": "1.0.0",
-  "description": "URBEX HUD - Iron Man Style",
+  "name": "urbex-tracker",
+  "version": "1.2.0",
+  "description": "URBEX Spot Tracker with photo upload and mobile optimization",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -11,9 +11,13 @@
     "express": "^4.18.2",
     "mongoose": "^7.5.0",
     "cors": "^2.8.5",
-    "dotenv": "^16.3.1"
+    "multer": "^1.4.5-lts.1",
+    "sharp": "^0.32.6"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
+  },
+  "engines": {
+    "node": ">=16.0.0"
   }
 }
