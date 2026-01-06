@@ -2,10 +2,11 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>URBEX Tracker</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
             --bg-primary: #0a0a0a;
@@ -24,6 +25,7 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
         }
         
         body {
@@ -32,12 +34,14 @@
             color: var(--text);
             line-height: 1.6;
             -webkit-font-smoothing: antialiased;
+            -webkit-text-size-adjust: 100%;
         }
         
         /* LAYOUT */
         .app {
             display: flex;
             min-height: 100vh;
+            position: relative;
         }
         
         .sidebar {
@@ -49,10 +53,11 @@
             position: fixed;
             height: 100vh;
             z-index: 100;
+            transition: transform 0.3s ease;
         }
         
         .logo {
-            padding: 2rem 1.5rem;
+            padding: 1.5rem;
             border-bottom: 1px solid var(--border);
         }
         
@@ -130,6 +135,7 @@
             margin-left: 280px;
             display: flex;
             flex-direction: column;
+            transition: margin-left 0.3s ease;
         }
         
         .header {
@@ -160,6 +166,9 @@
             cursor: pointer;
             transition: all 0.2s;
             font-size: 0.9rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
         }
         
         .btn:hover {
@@ -171,6 +180,30 @@
             flex: 1;
             padding: 2rem;
             overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        /* MOBILE MENU */
+        .mobile-menu-btn {
+            display: none;
+            background: transparent;
+            border: none;
+            color: var(--text);
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0.5rem;
+        }
+        
+        .mobile-header {
+            display: none;
+            padding: 1rem;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 90;
         }
         
         /* CARDS */
@@ -427,10 +460,104 @@
             border-color: var(--accent);
         }
         
-        .coordinate-inputs {
+        /* PHOTO UPLOAD */
+        .photo-upload-container {
+            border: 2px dashed var(--border);
+            border-radius: 8px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .photo-upload-container:hover {
+            border-color: var(--accent);
+        }
+        
+        .photo-upload-icon {
+            font-size: 3rem;
+            color: var(--text-dim);
+            margin-bottom: 1rem;
+        }
+        
+        .photo-upload-text {
+            color: var(--text-dim);
+            margin-bottom: 1rem;
+        }
+        
+        .photo-preview-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
             gap: 1rem;
+            margin-top: 1.5rem;
+        }
+        
+        .photo-preview {
+            position: relative;
+            border-radius: 8px;
+            overflow: hidden;
+            aspect-ratio: 1;
+        }
+        
+        .photo-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .remove-photo {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 25px;
+            height: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+        
+        .remove-photo:hover {
+            background: var(--danger);
+        }
+        
+        /* COORDINATES INPUT */
+        .coordinates-help {
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            margin-top: 0.25rem;
+        }
+        
+        .coordinates-help a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+        
+        .coordinates-help a:hover {
+            text-decoration: underline;
+        }
+        
+        .btn-get-location {
+            background: transparent;
+            color: var(--accent);
+            border: 1px solid var(--accent);
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            margin-top: 0.5rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .btn-get-location:hover {
+            background: rgba(0, 255, 136, 0.1);
         }
         
         /* DETAIL VIEW */
@@ -688,11 +815,10 @@
             background: #3a3a3a;
         }
         
-        /* MOBILE */
+        /* MOBILE RESPONSIVE */
         @media (max-width: 1024px) {
             .sidebar {
                 transform: translateX(-100%);
-                transition: transform 0.3s;
             }
             
             .sidebar.open {
@@ -709,6 +835,22 @@
             
             .grid {
                 grid-template-columns: 1fr;
+            }
+            
+            .mobile-menu-btn {
+                display: block;
+            }
+            
+            .mobile-header {
+                display: flex;
+            }
+            
+            .header {
+                display: none;
+            }
+            
+            .content {
+                padding: 1rem;
             }
         }
         
@@ -730,6 +872,57 @@
                 border-radius: 0;
                 max-height: 100vh;
             }
+            
+            .modal-body {
+                padding: 1.5rem;
+            }
+            
+            .modal-header {
+                padding: 1.25rem;
+            }
+            
+            .modal-footer {
+                padding: 1.25rem;
+            }
+            
+            .map-container {
+                height: calc(100vh - 160px);
+            }
+            
+            .card {
+                margin-bottom: 1rem;
+            }
+            
+            .btn {
+                padding: 0.75rem 1rem;
+                font-size: 0.85rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .form-group input,
+            .form-group select,
+            .form-group textarea {
+                padding: 0.875rem;
+                font-size: 16px; /* Previene zoom su iOS */
+            }
+            
+            .modal-body {
+                padding: 1rem;
+                max-height: calc(100vh - 140px);
+            }
+            
+            .detail-title {
+                font-size: 1.5rem;
+            }
+            
+            .gallery {
+                grid-template-columns: 1fr;
+            }
+            
+            .gallery img {
+                height: 200px;
+            }
         }
         
         /* LEAFLET CUSTOM */
@@ -747,11 +940,26 @@
         .leaflet-popup-tip {
             background: var(--bg-secondary) !important;
         }
+        
+        /* TOUCH OPTIMIZATIONS */
+        .touch-optimized {
+            touch-action: manipulation;
+        }
+        
+        input, textarea, button, select {
+            font-size: 16px; /* Previene zoom su iOS */
+        }
     </style>
 </head>
 <body>
     <div class="app">
-        <aside class="sidebar">
+        <div class="mobile-header">
+            <button class="mobile-menu-btn" id="mobile-menu-btn">☰</button>
+            <h1 class="page-title" id="mobile-page-title">Spot List</h1>
+            <button class="btn" id="mobile-add-btn">+</button>
+        </div>
+
+        <aside class="sidebar" id="sidebar">
             <div class="logo">
                 <h1>URBEX Tracker</h1>
                 <p>Urban Exploration</p>
@@ -791,7 +999,7 @@
         <main class="main">
             <div class="header">
                 <h1 class="page-title" id="page-title">Spot List</h1>
-                <button class="btn" id="add-mission-btn">+ Add Spot</button>
+                <button class="btn" id="add-mission-btn"><i class="fas fa-plus"></i> Add Spot</button>
             </div>
 
             <div class="content">
@@ -805,7 +1013,7 @@
                 </div>
 
                 <div id="map-view" style="display: none;">
-                    <div class="map-container">
+                    <div class="map-container touch-optimized">
                         <div id="map"></div>
                     </div>
                 </div>
@@ -841,15 +1049,15 @@
                 <form id="mission-form">
                     <div class="form-grid">
                         <div class="form-group">
-                            <label for="mission-name">Spot Name</label>
-                            <input type="text" id="mission-name" required>
+                            <label for="mission-name"><i class="fas fa-tag"></i> Spot Name</label>
+                            <input type="text" id="mission-name" required placeholder="Ex. Abandoned Factory">
                         </div>
                         <div class="form-group">
-                            <label for="mission-location">Location</label>
-                            <input type="text" id="mission-location" required>
+                            <label for="mission-location"><i class="fas fa-map-marker-alt"></i> Location</label>
+                            <input type="text" id="mission-location" required placeholder="City, Country">
                         </div>
                         <div class="form-group">
-                            <label for="mission-status">Status</label>
+                            <label for="mission-status"><i class="fas fa-flag"></i> Status</label>
                             <select id="mission-status">
                                 <option value="planned">To Explore</option>
                                 <option value="active">Exploring</option>
@@ -857,38 +1065,58 @@
                             </select>
                         </div>
                         <div class="form-group">
-                            <label for="mission-date">Planned Date</label>
+                            <label for="mission-date"><i class="fas fa-calendar"></i> Planned Date</label>
                             <input type="date" id="mission-date">
                         </div>
                         <div class="form-group full">
-                            <label>Coordinates</label>
-                            <div class="coordinate-inputs">
-                                <input type="text" id="mission-lat" placeholder="Latitude (45.4642)" required>
-                                <input type="text" id="mission-lng" placeholder="Longitude (9.1900)" required>
+                            <label for="mission-coords"><i class="fas fa-map-pin"></i> Coordinates</label>
+                            <input type="text" id="mission-coords" 
+                                   placeholder="45.4642,9.1900 or https://maps.google.com/?q=45.4642,9.1900"
+                                   required>
+                            <div class="coordinates-help">
+                                Format: "latitude,longitude" or Google Maps link<br>
+                                Example: 45.4642,9.1900
+                                <button type="button" class="btn-get-location" id="get-current-location">
+                                    <i class="fas fa-location-crosshairs"></i> Use My Location
+                                </button>
                             </div>
                         </div>
                         <div class="form-group full">
-                            <label for="mission-desc">Description</label>
+                            <label for="mission-desc"><i class="fas fa-align-left"></i> Description</label>
                             <textarea id="mission-desc" rows="4" required placeholder="Tell the story of this place..."></textarea>
                         </div>
                         <div class="form-group">
-                            <label for="mission-plan-a">Main Access</label>
+                            <label for="mission-plan-a"><i class="fas fa-door-open"></i> Main Access</label>
                             <textarea id="mission-plan-a" rows="3" placeholder="How to get in..."></textarea>
                         </div>
                         <div class="form-group">
-                            <label for="mission-plan-b">Alternative Access</label>
+                            <label for="mission-plan-b"><i class="fas fa-door-closed"></i> Alternative Access</label>
                             <textarea id="mission-plan-b" rows="3" placeholder="Backup plan..."></textarea>
                         </div>
                         <div class="form-group full">
-                            <label for="mission-photos">Photo URLs (one per line)</label>
-                            <textarea id="mission-photos" rows="3" placeholder="https://example.com/photo1.jpg"></textarea>
+                            <label><i class="fas fa-camera"></i> Photos</label>
+                            <div class="photo-upload-container" id="photo-drop-area">
+                                <div class="photo-upload-icon">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                </div>
+                                <div class="photo-upload-text">
+                                    <p>Drag & drop photos here or</p>
+                                    <button type="button" class="btn" id="browse-photos">
+                                        <i class="fas fa-folder-open"></i> Browse Files
+                                    </button>
+                                </div>
+                                <input type="file" id="photo-input" accept="image/*" multiple style="display: none;">
+                            </div>
+                            <div class="photo-preview-grid" id="photo-preview"></div>
                         </div>
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" id="cancel-btn">Cancel</button>
-                <button type="submit" form="mission-form" class="btn" id="save-btn">Save Spot</button>
+                <button type="submit" form="mission-form" class="btn" id="save-btn">
+                    <i class="fas fa-save"></i> Save Spot
+                </button>
             </div>
         </div>
     </div>
@@ -910,6 +1138,189 @@
         let currentView = 'missions';
         let editingMissionId = null;
         let currentDetailMissionId = null;
+        let uploadedPhotos = [];
+        
+        // Funzione per analizzare le coordinate
+        function parseCoordinates(input) {
+            input = input.trim();
+            
+            // Se è un link Google Maps
+            if (input.includes('google.com/maps') || input.includes('maps.app.goo.gl')) {
+                try {
+                    // Estrai le coordinate dal link
+                    const url = new URL(input);
+                    const q = url.searchParams.get('q');
+                    if (q) {
+                        const coords = q.split(',').map(Number);
+                        if (coords.length === 2 && !isNaN(coords[0]) && !isNaN(coords[1])) {
+                            return { lat: coords[0], lng: coords[1] };
+                        }
+                    }
+                    
+                    // Prova con @ formato (es: @45.4642,9.1900,15z)
+                    const match = input.match(/@(-?\d+\.?\d*),(-?\d+\.?\d*)/);
+                    if (match) {
+                        return { lat: parseFloat(match[1]), lng: parseFloat(match[2]) };
+                    }
+                } catch (e) {
+                    // Continua con altri metodi
+                }
+            }
+            
+            // Se è nel formato "lat,lng"
+            const parts = input.split(',');
+            if (parts.length === 2) {
+                const lat = parseFloat(parts[0].trim());
+                const lng = parseFloat(parts[1].trim());
+                if (!isNaN(lat) && !isNaN(lng)) {
+                    return { lat, lng };
+                }
+            }
+            
+            // Se è nel formato "lat lng"
+            const parts2 = input.split(/[\s,;]+/);
+            if (parts2.length >= 2) {
+                const lat = parseFloat(parts2[0]);
+                const lng = parseFloat(parts2[1]);
+                if (!isNaN(lat) && !isNaN(lng)) {
+                    return { lat, lng };
+                }
+            }
+            
+            return null;
+        }
+        
+        // Ottieni posizione corrente
+        function getCurrentLocation() {
+            if (!navigator.geolocation) {
+                showMessage('Geolocation not supported', 'error');
+                return;
+            }
+            
+            showMessage('Getting your location...', 'success');
+            
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    document.getElementById('mission-coords').value = `${lat.toFixed(6)},${lng.toFixed(6)}`;
+                    showMessage('Location obtained!', 'success');
+                },
+                (error) => {
+                    console.error('Geolocation error:', error);
+                    showMessage('Could not get location', 'error');
+                },
+                { enableHighAccuracy: true, timeout: 10000 }
+            );
+        }
+        
+        // Gestione upload foto
+        function setupPhotoUpload() {
+            const dropArea = document.getElementById('photo-drop-area');
+            const fileInput = document.getElementById('photo-input');
+            const previewContainer = document.getElementById('photo-preview');
+            const browseBtn = document.getElementById('browse-photos');
+            
+            browseBtn.addEventListener('click', () => fileInput.click());
+            
+            fileInput.addEventListener('change', handleFiles);
+            
+            // Drag and drop
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropArea.addEventListener(eventName, preventDefaults, false);
+            });
+            
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropArea.addEventListener(eventName, highlight, false);
+            });
+            
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropArea.addEventListener(eventName, unhighlight, false);
+            });
+            
+            function highlight() {
+                dropArea.style.borderColor = 'var(--accent)';
+                dropArea.style.backgroundColor = 'rgba(0, 255, 136, 0.05)';
+            }
+            
+            function unhighlight() {
+                dropArea.style.borderColor = 'var(--border)';
+                dropArea.style.backgroundColor = 'transparent';
+            }
+            
+            dropArea.addEventListener('drop', handleDrop, false);
+            
+            function handleDrop(e) {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                handleFiles({ target: { files } });
+            }
+            
+            function handleFiles(e) {
+                const files = Array.from(e.target.files);
+                
+                files.forEach(file => {
+                    if (!file.type.match('image.*')) {
+                        showMessage('Only image files are allowed', 'error');
+                        return;
+                    }
+                    
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const photoData = {
+                            id: Date.now() + Math.random(),
+                            dataUrl: e.target.result,
+                            file: file
+                        };
+                        
+                        uploadedPhotos.push(photoData);
+                        updatePhotoPreview();
+                    };
+                    reader.readAsDataURL(file);
+                });
+                
+                fileInput.value = '';
+            }
+            
+            function updatePhotoPreview() {
+                previewContainer.innerHTML = '';
+                
+                uploadedPhotos.forEach((photo, index) => {
+                    const preview = document.createElement('div');
+                    preview.className = 'photo-preview';
+                    preview.innerHTML = `
+                        <img src="${photo.dataUrl}" alt="Preview ${index + 1}">
+                        <button type="button" class="remove-photo" data-index="${index}">×</button>
+                    `;
+                    previewContainer.appendChild(preview);
+                });
+                
+                // Aggiungi event listener per rimuovere foto
+                document.querySelectorAll('.remove-photo').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const index = parseInt(this.getAttribute('data-index'));
+                        uploadedPhotos.splice(index, 1);
+                        updatePhotoPreview();
+                    });
+                });
+            }
+            
+            // Pulisci le foto quando si chiude il modal
+            document.getElementById('close-modal').addEventListener('click', () => {
+                uploadedPhotos = [];
+                updatePhotoPreview();
+            });
+            
+            document.getElementById('cancel-btn').addEventListener('click', () => {
+                uploadedPhotos = [];
+                updatePhotoPreview();
+            });
+        }
         
         async function fetchSpots() {
             try {
@@ -936,8 +1347,42 @@
             }
         }
         
+        async function uploadPhotos() {
+            if (uploadedPhotos.length === 0) {
+                return [];
+            }
+            
+            try {
+                const formData = new FormData();
+                uploadedPhotos.forEach(photo => {
+                    if (photo.file) {
+                        formData.append('photos', photo.file);
+                    }
+                });
+                
+                const response = await fetch(`${API_URL}/upload`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (!response.ok) throw new Error('Photo upload failed');
+                const data = await response.json();
+                return data.urls || [];
+            } catch (error) {
+                console.error('Error uploading photos:', error);
+                // Fallback: usa data URLs
+                return uploadedPhotos.map(photo => photo.dataUrl);
+            }
+        }
+        
         async function saveSpot(spotData) {
             try {
+                // Upload foto prima se necessario
+                if (uploadedPhotos.length > 0 && !editingMissionId) {
+                    const photoUrls = await uploadPhotos();
+                    spotData.photos = photoUrls;
+                }
+                
                 const url = editingMissionId 
                     ? `${API_URL}/spots/${editingMissionId}`
                     : `${API_URL}/spots`;
@@ -1005,9 +1450,43 @@
         function initMap() {
             if (map) return;
             map = L.map('map').setView([45.4642, 9.1900], 6);
+            
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© OpenStreetMap'
+                attribution: '© OpenStreetMap',
+                maxZoom: 19
             }).addTo(map);
+            
+            // Aggiungi controllo per geolocalizzazione
+            L.control.locate({
+                position: 'topright',
+                drawCircle: true,
+                follow: true,
+                setView: true,
+                keepCurrentZoomLevel: true,
+                markerStyle: {
+                    weight: 1,
+                    opacity: 0.8,
+                    fillOpacity: 0.8
+                },
+                circleStyle: {
+                    weight: 1,
+                    opacity: 0.2,
+                    fillOpacity: 0.2
+                },
+                icon: 'fa fa-map-marker-alt',
+                metric: true,
+                strings: {
+                    title: "Show my location",
+                    popup: "You are within {distance} {unit} from this point",
+                    outsideMapBoundsMsg: "You seem located outside the boundaries of the map"
+                },
+                locateOptions: {
+                    maxZoom: 16,
+                    watch: false,
+                    enableHighAccuracy: true
+                }
+            }).addTo(map);
+            
             updateMap();
         }
         
@@ -1018,13 +1497,27 @@
             
             missions.forEach(mission => {
                 if (mission.lat && mission.lng) {
-                    const marker = L.marker([mission.lat, mission.lng])
+                    let iconColor = 'blue';
+                    switch(mission.status) {
+                        case 'planned': iconColor = 'orange'; break;
+                        case 'active': iconColor = 'green'; break;
+                        case 'completed': iconColor = 'gray'; break;
+                    }
+                    
+                    const customIcon = L.divIcon({
+                        html: `<div style="background-color: ${iconColor}; width: 20px; height: 20px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 5px rgba(0,0,0,0.5);"></div>`,
+                        className: 'custom-marker',
+                        iconSize: [24, 24]
+                    });
+                    
+                    const marker = L.marker([mission.lat, mission.lng], { icon: customIcon })
                         .addTo(map)
                         .bindPopup(`
-                            <div>
-                                <h3 style="margin: 0 0 8px 0; font-size: 1rem;">${mission.name}</h3>
+                            <div style="max-width: 250px;">
+                                <h3 style="margin: 0 0 8px 0; font-size: 1rem; color: var(--accent);">${mission.name}</h3>
                                 <p style="margin: 4px 0; font-size: 0.875rem;">📍 ${mission.location}</p>
-                                <button onclick="showInList('${mission._id}')" class="btn" style="width: 100%; margin-top: 8px; padding: 8px;">View Details</button>
+                                <p style="margin: 4px 0; font-size: 0.875rem; color: #888;">${mission.status}</p>
+                                <button onclick="showInList('${mission._id}')" class="btn" style="width: 100%; margin-top: 8px; padding: 8px; font-size: 0.875rem;">View Details</button>
                             </div>
                         `);
                     markers.push(marker);
@@ -1047,15 +1540,24 @@
                 document.getElementById(`${v}-view`).style.display = v === view ? 'block' : 'none';
             });
             
-            document.getElementById('page-title').textContent = 
-                view === 'missions' ? 'Spot List' :
-                view === 'map' ? 'Map View' : 'Archive';
+            const title = view === 'missions' ? 'Spot List' :
+                         view === 'map' ? 'Map View' : 'Archive';
+            
+            document.getElementById('page-title').textContent = title;
+            document.getElementById('mobile-page-title').textContent = title;
             
             if (view === 'map') {
                 setTimeout(() => {
-                    if (map) map.invalidateSize();
-                    updateMap();
+                    if (map) {
+                        map.invalidateSize();
+                        updateMap();
+                    }
                 }, 100);
+            }
+            
+            // Chiudi sidebar su mobile
+            if (window.innerWidth <= 1024) {
+                document.getElementById('sidebar').classList.remove('open');
             }
         }
         
@@ -1077,7 +1579,7 @@
             container.innerHTML = '';
             missions.forEach(mission => {
                 const card = document.createElement('div');
-                card.className = 'card';
+                card.className = 'card touch-optimized';
                 
                 let statusText = '', statusClass = '';
                 switch(mission.status) {
@@ -1166,7 +1668,7 @@
                                     ${mission.lat.toFixed(6)}, ${mission.lng.toFixed(6)}
                                 </p>
                                 <button class="btn" style="width: 100%; margin-top: 1rem;" onclick="openInGoogleMaps(${mission.lat}, ${mission.lng})">
-                                    🗺️ Open in Google Maps
+                                    <i class="fas fa-external-link-alt"></i> Open in Maps
                                 </button>
                             </div>
                             ` : ''}
@@ -1190,13 +1692,13 @@
                                 <h3>Access Plans</h3>
                                 ${mission.planA ? `
                                     <div class="plan-card">
-                                        <h4>Plan A</h4>
+                                        <h4><i class="fas fa-door-open"></i> Plan A</h4>
                                         <p>${mission.planA}</p>
                                     </div>
                                 ` : ''}
                                 ${mission.planB ? `
                                     <div class="plan-card">
-                                        <h4>Plan B</h4>
+                                        <h4><i class="fas fa-door-closed"></i> Plan B</h4>
                                         <p>${mission.planB}</p>
                                     </div>
                                 ` : ''}
@@ -1206,8 +1708,8 @@
                     </div>
                     
                     <div class="action-buttons">
-                        <button class="btn" onclick="editMission('${mission._id}')">✏️ Edit</button>
-                        <button class="btn btn-danger" onclick="deleteSpot('${mission._id}')">🗑️ Delete</button>
+                        <button class="btn" onclick="editMission('${mission._id}')"><i class="fas fa-edit"></i> Edit</button>
+                        <button class="btn btn-danger" onclick="deleteSpot('${mission._id}')"><i class="fas fa-trash"></i> Delete</button>
                     </div>
                 </div>
             `;
@@ -1216,7 +1718,9 @@
                 setTimeout(() => {
                     const detailMap = L.map('detail-map').setView([mission.lat, mission.lng], 15);
                     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(detailMap);
-                    L.marker([mission.lat, mission.lng]).addTo(detailMap);
+                    
+                    const marker = L.marker([mission.lat, mission.lng]).addTo(detailMap);
+                    detailMap.fitBounds(marker.getBounds());
                 }, 100);
             }
             
@@ -1242,18 +1746,17 @@
             if (!mission) return;
             
             editingMissionId = id;
+            uploadedPhotos = [];
             document.getElementById('modal-title').textContent = 'Edit Spot';
             
             document.getElementById('mission-name').value = mission.name;
             document.getElementById('mission-location').value = mission.location;
             document.getElementById('mission-status').value = mission.status;
             document.getElementById('mission-date').value = mission.date ? mission.date.split('T')[0] : '';
-            document.getElementById('mission-lat').value = mission.lat || '';
-            document.getElementById('mission-lng').value = mission.lng || '';
+            document.getElementById('mission-coords').value = mission.lat && mission.lng ? `${mission.lat},${mission.lng}` : '';
             document.getElementById('mission-desc').value = mission.description;
             document.getElementById('mission-plan-a').value = mission.planA || '';
             document.getElementById('mission-plan-b').value = mission.planB || '';
-            document.getElementById('mission-photos').value = mission.photos ? mission.photos.join('\n') : '';
             
             closeDetailModal();
             document.getElementById('mission-modal').style.display = 'flex';
@@ -1261,9 +1764,11 @@
         
         function showAddMissionModal() {
             editingMissionId = null;
+            uploadedPhotos = [];
             document.getElementById('modal-title').textContent = 'Add New Spot';
             document.getElementById('mission-form').reset();
             
+            // Imposta data predefinita (prossimo sabato)
             const today = new Date();
             const daysUntilSaturday = (6 - today.getDay() + 7) % 7 || 7;
             const nextSaturday = new Date(today);
@@ -1271,61 +1776,94 @@
             document.getElementById('mission-date').value = nextSaturday.toISOString().split('T')[0];
             
             document.getElementById('mission-modal').style.display = 'flex';
+            
+            // Focus sul primo campo
+            setTimeout(() => {
+                document.getElementById('mission-name').focus();
+            }, 100);
         }
         
         function closeDetailModal() {
             document.getElementById('detail-modal').style.display = 'none';
         }
         
+        // Ottimizzazioni per mobile
+        function setupMobile() {
+            const menuBtn = document.getElementById('mobile-menu-btn');
+            const sidebar = document.getElementById('sidebar');
+            const mobileAddBtn = document.getElementById('mobile-add-btn');
+            const addMissionBtn = document.getElementById('add-mission-btn');
+            
+            menuBtn.addEventListener('click', () => {
+                sidebar.classList.toggle('open');
+            });
+            
+            mobileAddBtn.addEventListener('click', () => {
+                showAddMissionModal();
+            });
+            
+            // Chiudi sidebar quando si clicca all'esterno
+            document.addEventListener('click', (e) => {
+                if (window.innerWidth <= 1024 && 
+                    sidebar.classList.contains('open') &&
+                    !sidebar.contains(e.target) && 
+                    e.target !== menuBtn) {
+                    sidebar.classList.remove('open');
+                }
+            });
+            
+            // Gestisci orientamento schermo
+            window.addEventListener('orientationchange', () => {
+                setTimeout(() => {
+                    if (map) map.invalidateSize();
+                }, 300);
+            });
+            
+            // Previeni zoom su input su iOS
+            document.addEventListener('touchstart', function(e) {
+                if (e.target.type === 'number') {
+                    e.target.blur();
+                }
+            }, false);
+        }
+        
         document.addEventListener('DOMContentLoaded', async () => {
+            // Setup mobile
+            setupMobile();
+            setupPhotoUpload();
+            
+            // Setup navigazione
             document.querySelectorAll('.nav-item').forEach(item => {
                 item.addEventListener('click', () => switchView(item.dataset.view));
             });
             
+            // Setup bottoni
             document.getElementById('add-mission-btn').addEventListener('click', showAddMissionModal);
+            document.getElementById('get-current-location').addEventListener('click', getCurrentLocation);
+            
+            // Setup modali
             document.getElementById('close-modal').addEventListener('click', () => {
                 document.getElementById('mission-modal').style.display = 'none';
             });
+            
             document.getElementById('close-detail').addEventListener('click', closeDetailModal);
+            
             document.getElementById('close-viewer').addEventListener('click', () => {
                 document.getElementById('photo-viewer').style.display = 'none';
             });
+            
             document.getElementById('cancel-btn').addEventListener('click', () => {
                 document.getElementById('mission-modal').style.display = 'none';
+                uploadedPhotos = [];
+                document.getElementById('photo-preview').innerHTML = '';
             });
             
-            document.getElementById('mission-form').addEventListener('submit', async (e) => {
-                e.preventDefault();
-                
-                const photos = document.getElementById('mission-photos').value
-                    .split('\n')
-                    .map(url => url.trim())
-                    .filter(url => url.length > 0);
-                
-                const spotData = {
-                    name: document.getElementById('mission-name').value,
-                    location: document.getElementById('mission-location').value,
-                    status: document.getElementById('mission-status').value,
-                    date: document.getElementById('mission-date').value || null,
-                    lat: parseFloat(document.getElementById('mission-lat').value) || 45.4642,
-                    lng: parseFloat(document.getElementById('mission-lng').value) || 9.1900,
-                    description: document.getElementById('mission-desc').value,
-                    planA: document.getElementById('mission-plan-a').value,
-                    planB: document.getElementById('mission-plan-b').value,
-                    photos: photos.length > 0 ? photos : ['https://images.unsplash.com/photo-1519681393784-d120267933ba?w=800&q=80']
-                };
-                
-                try {
-                    await saveSpot(spotData);
-                    document.getElementById('mission-modal').style.display = 'none';
-                } catch (error) {
-                    console.error('Save error:', error);
-                }
-            });
-            
+            // Chiudi modali cliccando all'esterno
             document.getElementById('mission-modal').addEventListener('click', (e) => {
                 if (e.target === document.getElementById('mission-modal')) {
                     document.getElementById('mission-modal').style.display = 'none';
+                    uploadedPhotos = [];
+                    document.getElementById('photo-preview').innerHTML = '';
                 }
             });
             
@@ -1341,10 +1879,60 @@
                 }
             });
             
+            // Setup form
+            document.getElementById('mission-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const saveBtn = document.getElementById('save-btn');
+                const originalText = saveBtn.innerHTML;
+                saveBtn.innerHTML = '<div class="loading" style="width: 20px; height: 20px; display: inline-block; margin-right: 8px;"></div> Saving...';
+                saveBtn.disabled = true;
+                
+                try {
+                    // Parse coordinates
+                    const coordsInput = document.getElementById('mission-coords').value;
+                    const coords = parseCoordinates(coordsInput);
+                    
+                    if (!coords) {
+                        throw new Error('Please enter valid coordinates (e.g., 45.4642,9.1900)');
+                    }
+                    
+                    const spotData = {
+                        name: document.getElementById('mission-name').value,
+                        location: document.getElementById('mission-location').value,
+                        status: document.getElementById('mission-status').value,
+                        date: document.getElementById('mission-date').value || null,
+                        lat: coords.lat,
+                        lng: coords.lng,
+                        description: document.getElementById('mission-desc').value,
+                        planA: document.getElementById('mission-plan-a').value,
+                        planB: document.getElementById('mission-plan-b').value
+                    };
+                    
+                    await saveSpot(spotData);
+                    document.getElementById('mission-modal').style.display = 'none';
+                    uploadedPhotos = [];
+                    document.getElementById('photo-preview').innerHTML = '';
+                } catch (error) {
+                    console.error('Save error:', error);
+                    showMessage(error.message || 'Error saving spot', 'error');
+                } finally {
+                    saveBtn.innerHTML = originalText;
+                    saveBtn.disabled = false;
+                }
+            });
+            
+            // Carica dati iniziali
             await fetchSpots();
             initMap();
             
+            // Auto-refresh ogni 30 secondi
             setInterval(fetchSpots, 30000);
+            
+            // Gestisci resize finestra
+            window.addEventListener('resize', () => {
+                if (map) map.invalidateSize();
+            });
         });
     </script>
 </body>
