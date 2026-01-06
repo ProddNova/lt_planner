@@ -8,14 +8,12 @@ const app = express();
 // Middleware
 app.use(cors());
 app.use(express.json());
-
-// Serve frontend static files
 app.use(express.static(__dirname));
 
-// ✅ STRINGA DI CONNESSIONE CORRETTA
-const MONGODB_URI = 'mongodb+srv://terrilegiacomo_db_user:Xm3IlXAPEG5WBNpQ@urbex-hud-db.okizzoq.mongodb.net/urbex-hud?retryWrites=true&w=majority&appName=urbex-hud-db';
+// ✅ STRINGA DI CONNESSIONE AGGIORNATA CON LA NUOVA PASSWORD
+const MONGODB_URI = 'mongodb+srv://terrilegiacomo_db_user:Prova019283@urbex-hud-db.okizzoq.mongodb.net/urbex-hud?retryWrites=true&w=majority&appName=urbex-hud-db';
 
-console.log('🔧 Tentativo di connessione con stringa:', MONGODB_URI.replace(/Xm3IlXAPEG5WBNpQ/, '***'));
+console.log('🔧 Tentativo di connessione MongoDB...');
 
 // Schema per gli spots
 const spotSchema = new mongoose.Schema({
@@ -53,7 +51,8 @@ app.get('/api/spots', async (req, res) => {
         console.error('Error fetching spots:', error);
         res.status(500).json({ 
             error: 'Database error',
-            message: 'Impossibile connettersi al database'
+            message: 'Impossibile connettersi al database',
+            details: error.message
         });
     }
 });
@@ -102,15 +101,26 @@ app.delete('/api/spots/:id', async (req, res) => {
     }
 });
 
-// Test route
+// Test route con dettagli
 app.get('/api/test', async (req, res) => {
     try {
-        // Test semplice della connessione
-        await mongoose.connection.db.admin().ping();
+        const connectionState = mongoose.connection.readyState;
+        let dbInfo = {
+            connectionState: connectionState,
+            state: ['disconnected', 'connected', 'connecting', 'disconnecting'][connectionState]
+        };
+        
+        if (connectionState === 1) {
+            const ping = await mongoose.connection.db.admin().ping();
+            dbInfo.ping = ping;
+            dbInfo.databaseName = mongoose.connection.db.databaseName;
+            dbInfo.collections = await mongoose.connection.db.listCollections().toArray();
+        }
+        
         res.json({ 
-            status: 'OK', 
-            message: 'Database connesso',
-            connectionState: mongoose.connection.readyState 
+            status: connectionState === 1 ? 'OK' : 'ERROR',
+            message: connectionState === 1 ? 'Database connesso' : 'Database non connesso',
+            ...dbInfo
         });
     } catch (error) {
         res.status(500).json({ 
@@ -121,12 +131,15 @@ app.get('/api/test', async (req, res) => {
     }
 });
 
-// Health check
+// Health check dettagliato
 app.get('/api/health', (req, res) => {
+    const state = mongoose.connection.readyState;
     res.json({ 
-        status: 'OK', 
+        status: state === 1 ? 'healthy' : 'unhealthy',
+        database: state === 1 ? 'connected' : 'disconnected',
+        databaseState: ['disconnected', 'connected', 'connecting', 'disconnecting'][state],
         timestamp: new Date().toISOString(),
-        database: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
+        environment: process.env.NODE_ENV || 'development'
     });
 });
 
@@ -136,24 +149,25 @@ app.get('/api', (req, res) => {
         message: 'URBEX HUD API',
         version: '1.0.0',
         endpoints: {
-            spots: '/api/spots',
-            test: '/api/test',
-            health: '/api/health'
-        }
+            spots: 'GET/POST /api/spots',
+            spot: 'GET/PUT/DELETE /api/spots/:id',
+            test: 'GET /api/test',
+            health: 'GET /api/health'
+        },
+        database: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
     });
 });
 
-// Serve frontend per tutte le altre rotte
+// Serve frontend
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// Connessione al database e avvio server
-async function startServer() {
+// Connessione al database
+async function connectToDatabase() {
     try {
         console.log('🔄 Connessione a MongoDB Atlas...');
         
-        // Opzioni di connessione
         const options = {
             useNewUrlParser: true,
             useUnifiedTopology: true,
@@ -165,13 +179,31 @@ async function startServer() {
         
         await mongoose.connect(MONGODB_URI, options);
         console.log('✅ Connesso a MongoDB Atlas');
+        console.log(`📊 Database: ${mongoose.connection.db.databaseName}`);
         
-        // Verifica la connessione
+        // Test ping
         await mongoose.connection.db.admin().ping();
-        console.log('📊 Database risponde correttamente');
+        console.log('📡 Database risponde correttamente');
         
-        // Crea qualche dato di esempio se il database è vuoto
+        return true;
+    } catch (error) {
+        console.error('❌ ERRORE CONNESSIONE MONGODB:', error.message);
+        console.log('\n🔧 DIAGNOSTICA:');
+        console.log('1. Controlla MongoDB Atlas > Network Access > IP 0.0.0.0/0');
+        console.log('2. Controlla che la password sia corretta: Prova019283');
+        console.log('3. Controlla che l\'utente abbia permessi');
+        console.log('4. Stringa usata:', MONGODB_URI.replace(/Prova019283/, '***'));
+        
+        return false;
+    }
+}
+
+// Inserisci dati di esempio
+async function seedDatabase() {
+    try {
         const count = await Spot.countDocuments();
+        console.log(`📊 Documenti nel database: ${count}`);
+        
         if (count === 0) {
             console.log('📦 Inserimento dati di esempio...');
             const sampleSpots = [
@@ -182,9 +214,9 @@ async function startServer() {
                     date: new Date("2024-06-15"),
                     lat: 45.4843,
                     lng: 9.1842,
-                    description: "Former tobacco factory abandoned since the 80s.",
-                    planA: "Access from side gate on Via delle Industrie.",
-                    planB: "Gap in rear fence near silos.",
+                    description: "Ex tobacco factory from the 80s with original machinery.",
+                    planA: "Side gate access on Via delle Industrie",
+                    planB: "Gap in rear fence",
                     photos: [
                         "https://images.unsplash.com/photo-1581094794329-c8112a89af12?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
                     ]
@@ -193,38 +225,39 @@ async function startServer() {
             await Spot.insertMany(sampleSpots);
             console.log('✅ Dati di esempio inseriti');
         }
-        
-        // Avvia il server
-        const PORT = process.env.PORT || 3000;
-        app.listen(PORT, () => {
-            console.log(`🚀 Server in esecuzione sulla porta ${PORT}`);
-            console.log(`🌐 Frontend: http://localhost:${PORT}`);
-            console.log(`🔧 API: http://localhost:${PORT}/api`);
-            console.log(`🧪 Test DB: http://localhost:${PORT}/api/test`);
-        });
-        
     } catch (error) {
-        console.error('❌ ERRORE CRITICO:', error.message);
-        console.log('\n🔧 PROBLEMI COMUNI E SOLUZIONI:');
-        console.log('1. Verifica che la password sia corretta');
-        console.log('2. Vai su MongoDB Atlas > Network Access > Add IP Address > Allow Access from Anywhere');
-        console.log('3. Verifica che l\'utente "terrilegiacomo_db_user" abbia permessi di lettura/scrittura');
-        console.log('4. Controlla che il cluster sia attivo (non in pausa)');
-        
-        // Avvia comunque il server (ma senza database)
-        const PORT = process.env.PORT || 3000;
-        app.listen(PORT, () => {
-            console.log(`⚠️ Server avviato SENZA database sulla porta ${PORT}`);
-            console.log(`📱 Frontend funzionante: http://localhost:${PORT}`);
-            console.log(`❌ API database non disponibili`);
-        });
+        console.error('❌ Errore durante il seed:', error.message);
     }
 }
 
-// Gestione errori non catturati
-process.on('unhandledRejection', (error) => {
-    console.error('❌ Unhandled Rejection:', error);
-});
+// Avvio server
+async function startServer() {
+    const PORT = process.env.PORT || 10000;
+    
+    // Prova a connetterti
+    const connected = await connectToDatabase();
+    
+    if (connected) {
+        // Inserisci dati di esempio
+        await seedDatabase();
+        
+        app.listen(PORT, () => {
+            console.log(`\n🎉 SERVER AVVIATO CON SUCCESSO!`);
+            console.log(`🌐 Frontend: https://lt-planner.onrender.com`);
+            console.log(`🔧 API: https://lt-planner.onrender.com/api`);
+            console.log(`🧪 Test DB: https://lt-planner.onrender.com/api/test`);
+            console.log(`📊 Health: https://lt-planner.onrender.com/api/health`);
+        });
+    } else {
+        // Avvia senza database
+        app.listen(PORT, () => {
+            console.log(`\n⚠️  SERVER AVVIATO SENZA DATABASE`);
+            console.log(`🌐 Frontend: https://lt-planner.onrender.com`);
+            console.log(`❌ API database non disponibili`);
+            console.log(`💡 Controlla i logs sopra per diagnosticare il problema`);
+        });
+    }
+}
 
 // Avvia tutto
 startServer();
