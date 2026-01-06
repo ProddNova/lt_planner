@@ -3,473 +3,308 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>URBEX HUD | Iron Man Style</title>
+    <title>URBEX Tracker</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --hud-red: #ff0033;
-            --hud-red-glow: #ff3366;
-            --hud-red-dark: #cc0029;
-            --hud-bg: #0a0a0f;
-            --hud-panel: #1a1a2e;
-            --hud-border: #2a2a3e;
-            --hud-text: #ffffff;
-            --hud-text-dim: #b0b0b0;
-            --hud-gold: #ffd700;
-            --hud-warning: #ffaa00;
-            --hud-success: #00ff88;
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #1a1a1a;
+            --bg-card: #151515;
+            --accent: #00ff88;
+            --accent-dim: #00cc6a;
+            --text: #ffffff;
+            --text-dim: #888888;
+            --border: #2a2a2a;
+            --warning: #ffaa00;
+            --danger: #ff4444;
         }
         
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Orbitron', 'Segoe UI', monospace;
         }
         
         body {
-            background: var(--hud-bg);
-            color: var(--hud-text);
+            font-family: 'Inter', -apple-system, system-ui, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+        
+        /* LAYOUT */
+        .app {
+            display: flex;
             min-height: 100vh;
-            overflow: hidden;
-            font-weight: 500;
-        }
-        
-        body::before {
-            content: "";
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: 
-                radial-gradient(circle at 20% 50%, rgba(255, 0, 51, 0.03) 0%, transparent 50%),
-                radial-gradient(circle at 80% 20%, rgba(255, 0, 51, 0.02) 0%, transparent 50%),
-                linear-gradient(rgba(255, 0, 51, 0.02) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255, 0, 51, 0.02) 1px, transparent 1px);
-            background-size: 100% 100%, 100% 100%, 50px 50px, 50px 50px;
-            pointer-events: none;
-            z-index: -1;
-        }
-        
-        body::after {
-            content: "";
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(
-                to bottom,
-                transparent 50%,
-                rgba(255, 0, 51, 0.03) 50%
-            );
-            background-size: 100% 4px;
-            pointer-events: none;
-            z-index: -1;
-            animation: scanline 10s linear infinite;
-        }
-        
-        @keyframes scanline {
-            0% { transform: translateY(-100%); }
-            100% { transform: translateY(100%); }
-        }
-        
-        .app-container {
-            display: grid;
-            grid-template-columns: 300px 1fr;
-            height: 100vh;
-            position: relative;
-        }
-        
-        .app-container::before {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            border: 2px solid transparent;
-            background: linear-gradient(45deg, transparent, var(--hud-red), transparent) border-box;
-            mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
-            mask-composite: exclude;
-            pointer-events: none;
-            z-index: 1000;
         }
         
         .sidebar {
-            background: rgba(26, 26, 46, 0.95);
-            backdrop-filter: blur(10px);
-            border-right: 2px solid var(--hud-red);
+            width: 280px;
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border);
             display: flex;
             flex-direction: column;
-            overflow: hidden;
-            position: relative;
-            box-shadow: 0 0 30px rgba(255, 0, 51, 0.2);
-        }
-        
-        .sidebar::before {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 2px;
-            background: linear-gradient(90deg, 
-                transparent, 
-                var(--hud-red), 
-                var(--hud-gold), 
-                var(--hud-red), 
-                transparent
-            );
-            animation: borderScan 3s linear infinite;
-        }
-        
-        @keyframes borderScan {
-            0% { transform: translateX(-100%); }
-            100% { transform: translateX(100%); }
+            position: fixed;
+            height: 100vh;
+            z-index: 100;
         }
         
         .logo {
             padding: 2rem 1.5rem;
-            border-bottom: 2px solid var(--hud-red);
-            background: rgba(10, 10, 15, 0.9);
-            text-align: center;
+            border-bottom: 1px solid var(--border);
         }
         
         .logo h1 {
-            font-size: 1.8rem;
-            font-weight: 800;
-            background: linear-gradient(to right, var(--hud-red), var(--hud-gold));
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-            text-shadow: 0 0 20px rgba(255, 0, 51, 0.5);
-            letter-spacing: 2px;
-            margin-bottom: 0.5rem;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--accent);
+            letter-spacing: -0.5px;
         }
         
         .logo p {
-            color: var(--hud-text-dim);
-            font-size: 0.9rem;
-            letter-spacing: 3px;
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            margin-top: 0.25rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
         
         .nav {
-            padding: 1.5rem;
-            flex-grow: 1;
+            padding: 1rem;
+            flex: 1;
         }
         
         .nav-item {
             display: flex;
             align-items: center;
-            gap: 1rem;
-            padding: 1.25rem;
-            margin-bottom: 0.75rem;
+            gap: 0.75rem;
+            padding: 0.875rem 1rem;
+            margin-bottom: 0.25rem;
             border-radius: 8px;
-            color: var(--hud-text);
+            color: var(--text-dim);
             cursor: pointer;
-            transition: all 0.3s;
-            border: 1px solid transparent;
-            background: rgba(255, 0, 51, 0.05);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .nav-item::before {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 0, 51, 0.2), transparent);
-            transition: left 0.5s;
-        }
-        
-        .nav-item:hover::before {
-            left: 100%;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+            font-weight: 500;
         }
         
         .nav-item:hover {
-            border-color: var(--hud-red);
-            box-shadow: 0 0 15px rgba(255, 0, 51, 0.3);
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text);
         }
         
         .nav-item.active {
-            background: linear-gradient(135deg, rgba(255, 0, 51, 0.2), rgba(204, 0, 41, 0.2));
-            border-color: var(--hud-red);
-            box-shadow: 0 0 20px rgba(255, 0, 51, 0.4);
-        }
-        
-        .nav-item i {
-            width: 24px;
-            text-align: center;
-            font-size: 1.2rem;
-            color: var(--hud-red);
+            background: rgba(0, 255, 136, 0.1);
+            color: var(--accent);
         }
         
         .stats {
             padding: 1.5rem;
-            background: rgba(10, 10, 15, 0.9);
-            border-top: 2px solid var(--hud-red);
+            border-top: 1px solid var(--border);
         }
         
         .stat {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 1rem;
-            padding: 0.75rem;
-            background: rgba(255, 0, 51, 0.05);
-            border-radius: 6px;
-            border: 1px solid rgba(255, 0, 51, 0.2);
+            align-items: center;
+            padding: 0.75rem 0;
+        }
+        
+        .stat span:first-child {
+            font-size: 0.8rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
         
         .stat-value {
-            color: var(--hud-red);
-            font-weight: 700;
             font-size: 1.5rem;
-            text-shadow: 0 0 10px rgba(255, 0, 51, 0.5);
+            font-weight: 700;
+            color: var(--accent);
         }
         
-        .main-content {
+        .main {
+            flex: 1;
+            margin-left: 280px;
             display: flex;
             flex-direction: column;
-            overflow: hidden;
-            position: relative;
         }
         
-        .top-bar {
+        .header {
             padding: 1.5rem 2rem;
-            background: rgba(26, 26, 46, 0.95);
-            backdrop-filter: blur(10px);
-            border-bottom: 2px solid var(--hud-red);
+            border-bottom: 1px solid var(--border);
+            background: var(--bg-secondary);
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
+            position: sticky;
+            top: 0;
+            z-index: 50;
         }
         
         .page-title {
-            font-size: 1.6rem;
+            font-size: 1.5rem;
             font-weight: 700;
-            color: var(--hud-text);
-            text-shadow: 0 0 10px rgba(255, 0, 51, 0.5);
-            display: flex;
-            align-items: center;
-            gap: 1rem;
+            letter-spacing: -0.5px;
         }
         
-        .page-title::before {
-            content: "▶";
-            color: var(--hud-red);
-            animation: pulse 1s infinite;
-        }
-        
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-        
-        .hud-btn {
-            background: linear-gradient(135deg, var(--hud-red), var(--hud-red-dark));
-            color: white;
+        .btn {
+            background: var(--accent);
+            color: var(--bg-primary);
             border: none;
-            padding: 1rem 2rem;
+            padding: 0.75rem 1.5rem;
             border-radius: 8px;
-            font-weight: 700;
+            font-weight: 600;
             cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            transition: all 0.3s;
-            box-shadow: 0 5px 15px rgba(255, 0, 51, 0.3);
-            position: relative;
-            overflow: hidden;
-            letter-spacing: 1px;
+            transition: all 0.2s;
+            font-size: 0.9rem;
         }
         
-        .hud-btn::before {
-            content: "";
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: linear-gradient(
-                to bottom right,
-                transparent 30%,
-                rgba(255, 255, 255, 0.1) 50%,
-                transparent 70%
-            );
-            transform: rotate(30deg);
-            transition: transform 0.5s;
+        .btn:hover {
+            background: var(--accent-dim);
+            transform: translateY(-1px);
         }
         
-        .hud-btn:hover::before {
-            transform: rotate(60deg);
-        }
-        
-        .hud-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(255, 0, 51, 0.5);
-        }
-        
-        .content-area {
-            flex-grow: 1;
+        .content {
+            flex: 1;
             padding: 2rem;
             overflow-y: auto;
-            background: rgba(10, 10, 15, 0.7);
         }
         
-        .missions-grid {
+        /* CARDS */
+        .grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-            gap: 2rem;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 1.5rem;
         }
         
-        .mission-card {
-            background: linear-gradient(145deg, rgba(26, 26, 46, 0.9), rgba(10, 10, 15, 0.9));
+        .card {
+            background: var(--bg-card);
             border-radius: 12px;
             overflow: hidden;
-            border: 2px solid rgba(255, 0, 51, 0.3);
-            transition: all 0.3s;
+            border: 1px solid var(--border);
+            transition: all 0.2s;
             cursor: pointer;
-            position: relative;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
         }
         
-        .mission-card::before {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: linear-gradient(90deg, var(--hud-red), var(--hud-gold), var(--hud-red));
+        .card:hover {
+            border-color: var(--accent);
+            transform: translateY(-2px);
         }
         
-        .mission-card:hover {
-            transform: translateY(-5px);
-            border-color: var(--hud-red);
-            box-shadow: 0 10px 30px rgba(255, 0, 51, 0.4);
-        }
-        
-        .mission-card.highlighted {
-            border-color: var(--hud-gold);
-            box-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
-            animation: highlightPulse 2s infinite;
-        }
-        
-        @keyframes highlightPulse {
-            0%, 100% { box-shadow: 0 0 30px rgba(255, 215, 0, 0.5); }
-            50% { box-shadow: 0 0 50px rgba(255, 215, 0, 0.7); }
-        }
-        
-        .mission-image {
+        .card-image {
             width: 100%;
-            height: 200px;
+            height: 180px;
             object-fit: cover;
-            border-bottom: 2px solid rgba(255, 0, 51, 0.3);
-            filter: contrast(1.2) saturate(1.1);
         }
         
-        .mission-content {
-            padding: 1.5rem;
+        .card-content {
+            padding: 1.25rem;
         }
         
-        .mission-header {
+        .card-header {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            margin-bottom: 1rem;
+            margin-bottom: 0.75rem;
+            gap: 1rem;
         }
         
-        .mission-title {
-            font-size: 1.3rem;
-            font-weight: 700;
-            color: var(--hud-text);
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
             line-height: 1.3;
+            flex: 1;
         }
         
-        .mission-status {
-            padding: 0.5rem 1rem;
+        .badge {
+            padding: 0.25rem 0.75rem;
             border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 700;
-            letter-spacing: 1px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
         }
         
-        .status-planned {
+        .badge-planned {
             background: rgba(255, 170, 0, 0.15);
-            color: var(--hud-warning);
-            border: 1px solid rgba(255, 170, 0, 0.3);
+            color: var(--warning);
         }
         
-        .status-active {
+        .badge-active {
             background: rgba(0, 255, 136, 0.15);
-            color: var(--hud-success);
-            border: 1px solid rgba(0, 255, 136, 0.3);
+            color: var(--accent);
         }
         
-        .status-completed {
-            background: rgba(255, 0, 51, 0.15);
-            color: var(--hud-red);
-            border: 1px solid rgba(255, 0, 51, 0.3);
+        .badge-completed {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-dim);
         }
         
-        .mission-location {
-            color: var(--hud-text-dim);
-            font-size: 0.95rem;
-            margin-bottom: 1rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
+        .card-location {
+            font-size: 0.875rem;
+            color: var(--text-dim);
+            margin-bottom: 0.5rem;
         }
         
-        .mission-coordinates {
-            color: var(--hud-red);
-            font-size: 0.85rem;
-            margin-bottom: 1rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
+        .card-coords {
+            font-size: 0.75rem;
+            color: var(--text-dim);
             font-family: 'Courier New', monospace;
+            margin-bottom: 0.75rem;
         }
         
-        .mission-description {
-            color: var(--hud-text-dim);
-            font-size: 0.95rem;
+        .card-description {
+            font-size: 0.875rem;
+            color: var(--text-dim);
             line-height: 1.5;
-            margin-bottom: 1rem;
             display: -webkit-box;
-            -webkit-line-clamp: 3;
+            -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
             overflow: hidden;
+            margin-bottom: 1rem;
         }
         
-        .mission-footer {
+        .card-footer {
             display: flex;
             justify-content: space-between;
             align-items: center;
             padding-top: 1rem;
-            border-top: 1px solid rgba(255, 0, 51, 0.2);
+            border-top: 1px solid var(--border);
         }
         
-        .mission-date {
-            color: var(--hud-text-dim);
-            font-size: 0.9rem;
+        .card-date {
+            font-size: 0.8rem;
+            color: var(--text-dim);
         }
         
+        .btn-small {
+            background: transparent;
+            color: var(--accent);
+            border: 1px solid var(--accent);
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-small:hover {
+            background: var(--accent);
+            color: var(--bg-primary);
+        }
+        
+        /* MAP */
         .map-container {
             width: 100%;
-            height: 600px;
+            height: calc(100vh - 200px);
             border-radius: 12px;
             overflow: hidden;
-            border: 3px solid var(--hud-red);
-            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.5);
-            position: relative;
+            border: 1px solid var(--border);
         }
         
         #map {
@@ -477,40 +312,7 @@
             height: 100%;
         }
         
-        .leaflet-popup-content-wrapper {
-            background: var(--hud-panel) !important;
-            border: 2px solid var(--hud-red) !important;
-            border-radius: 8px !important;
-            color: var(--hud-text) !important;
-        }
-        
-        .leaflet-popup-content {
-            font-family: 'Orbitron', monospace !important;
-            margin: 1rem !important;
-        }
-        
-        .leaflet-popup-content button {
-            background: linear-gradient(135deg, var(--hud-red), var(--hud-red-dark));
-            color: white;
-            border: none;
-            padding: 0.5rem 1rem;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: 600;
-            margin-top: 0.5rem;
-            width: 100%;
-            transition: all 0.3s;
-        }
-        
-        .leaflet-popup-content button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 3px 10px rgba(255, 0, 51, 0.3);
-        }
-        
-        .leaflet-popup-tip {
-            background: var(--hud-red) !important;
-        }
-        
+        /* MODAL */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -518,56 +320,40 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.95);
-            z-index: 2000;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
             align-items: center;
             justify-content: center;
             padding: 1rem;
-            backdrop-filter: blur(10px);
         }
         
         .modal {
-            background: linear-gradient(145deg, var(--hud-panel), var(--hud-bg));
-            border-radius: 15px;
+            background: var(--bg-secondary);
+            border-radius: 12px;
             width: 100%;
-            max-width: 1000px;
+            max-width: 900px;
             max-height: 90vh;
             overflow: hidden;
-            border: 3px solid var(--hud-red);
-            box-shadow: 0 20px 60px rgba(255, 0, 51, 0.3);
-            position: relative;
-        }
-        
-        .modal::before {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: linear-gradient(90deg, var(--hud-red), var(--hud-gold), var(--hud-red));
+            border: 1px solid var(--border);
         }
         
         .modal-header {
-            padding: 2rem 2.5rem;
-            background: rgba(10, 10, 15, 0.9);
-            border-bottom: 2px solid var(--hud-red);
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid var(--border);
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
         
         .modal-header h2 {
-            font-size: 1.8rem;
-            color: var(--hud-red);
+            font-size: 1.5rem;
             font-weight: 700;
-            text-shadow: 0 0 15px rgba(255, 0, 51, 0.5);
         }
         
         .close-btn {
-            background: rgba(255, 0, 51, 0.1);
-            border: 1px solid var(--hud-red);
-            color: var(--hud-red);
+            background: transparent;
+            border: none;
+            color: var(--text-dim);
             font-size: 1.5rem;
             cursor: pointer;
             width: 40px;
@@ -576,185 +362,29 @@
             align-items: center;
             justify-content: center;
             border-radius: 8px;
-            transition: all 0.3s;
+            transition: all 0.2s;
         }
         
         .close-btn:hover {
-            background: rgba(255, 0, 51, 0.2);
-            transform: rotate(90deg);
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text);
         }
         
         .modal-body {
-            padding: 2.5rem;
-            overflow-y: auto;
-            max-height: 60vh;
-        }
-        
-        .detail-presentation {
-            background: linear-gradient(135deg, rgba(26, 26, 46, 0.8), rgba(10, 10, 15, 0.9));
-            border-radius: 12px;
             padding: 2rem;
-            border: 2px solid var(--hud-red);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-            margin-bottom: 2rem;
+            overflow-y: auto;
+            max-height: calc(90vh - 180px);
         }
         
-        .detail-header {
-            text-align: center;
-            margin-bottom: 2rem;
-            padding-bottom: 1.5rem;
-            border-bottom: 1px solid rgba(255, 0, 51, 0.3);
-        }
-        
-        .detail-title {
-            font-size: 2.5rem;
-            font-weight: 800;
-            background: linear-gradient(to right, var(--hud-red), var(--hud-gold));
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-            text-shadow: 0 0 20px rgba(255, 0, 51, 0.3);
-            margin-bottom: 0.5rem;
-        }
-        
-        .detail-subtitle {
-            color: var(--hud-text-dim);
-            font-size: 1.2rem;
-            letter-spacing: 2px;
-        }
-        
-        .detail-grid {
-            display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 2rem;
-        }
-        
-        .detail-section {
-            margin-bottom: 2rem;
-        }
-        
-        .detail-section h3 {
-            font-size: 1.3rem;
-            color: var(--hud-red);
-            margin-bottom: 1rem;
-            padding-bottom: 0.5rem;
-            border-bottom: 2px solid rgba(255, 0, 51, 0.3);
+        .modal-footer {
+            padding: 1.5rem 2rem;
+            border-top: 1px solid var(--border);
             display: flex;
-            align-items: center;
+            justify-content: flex-end;
             gap: 1rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
         }
         
-        .detail-section h3::before {
-            content: "▶";
-            color: var(--hud-red);
-        }
-        
-        .story-box {
-            background: rgba(10, 10, 15, 0.7);
-            border-radius: 10px;
-            padding: 1.5rem;
-            border-left: 4px solid var(--hud-red);
-            line-height: 1.8;
-            color: var(--hud-text-dim);
-        }
-        
-        .detail-map {
-            height: 300px;
-            border-radius: 10px;
-            overflow: hidden;
-            border: 2px solid var(--hud-red);
-            margin-top: 1rem;
-        }
-        
-        .gallery {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 1rem;
-            margin-top: 1rem;
-        }
-        
-        .gallery img {
-            width: 100%;
-            height: 120px;
-            object-fit: cover;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s;
-            border: 2px solid rgba(255, 0, 51, 0.3);
-        }
-        
-        .gallery img:hover {
-            transform: scale(1.05);
-            border-color: var(--hud-red);
-            box-shadow: 0 5px 15px rgba(255, 0, 51, 0.3);
-        }
-        
-        .plan-card {
-            background: rgba(10, 10, 15, 0.7);
-            padding: 1.5rem;
-            border-radius: 10px;
-            margin-bottom: 1rem;
-            border-left: 4px solid var(--hud-red);
-        }
-        
-        .plan-card h4 {
-            color: var(--hud-red);
-            font-size: 1.1rem;
-            margin-bottom: 0.75rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        
-        .action-buttons {
-            display: flex;
-            gap: 1rem;
-            margin-top: 2rem;
-        }
-        
-        .action-btn {
-            flex: 1;
-            padding: 1rem;
-            border-radius: 8px;
-            border: 2px solid;
-            background: rgba(255, 0, 51, 0.1);
-            color: var(--hud-text);
-            font-weight: 700;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.75rem;
-            transition: all 0.3s;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        
-        .action-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 5px 20px rgba(255, 0, 51, 0.3);
-        }
-        
-        .action-btn.maps {
-            border-color: var(--hud-success);
-            color: var(--hud-success);
-        }
-        
-        .action-btn.maps:hover {
-            background: rgba(0, 255, 136, 0.1);
-        }
-        
-        .action-btn.list {
-            border-color: var(--hud-gold);
-            color: var(--hud-gold);
-        }
-        
-        .action-btn.list:hover {
-            background: rgba(255, 215, 0, 0.1);
-        }
-        
+        /* FORM */
         .form-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -767,36 +397,34 @@
             gap: 0.5rem;
         }
         
+        .form-group.full {
+            grid-column: 1 / -1;
+        }
+        
         .form-group label {
-            font-size: 0.9rem;
-            font-weight: 700;
-            color: var(--hud-red);
-            text-transform: uppercase;
-            letter-spacing: 1px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text);
         }
         
         .form-group input,
         .form-group select,
         .form-group textarea {
-            padding: 1rem;
-            background: rgba(10, 10, 15, 0.7);
-            border: 2px solid rgba(255, 0, 51, 0.3);
+            padding: 0.75rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
             border-radius: 8px;
-            color: var(--hud-text);
-            font-size: 1rem;
-            transition: all 0.3s;
+            color: var(--text);
+            font-size: 0.9rem;
+            font-family: inherit;
+            transition: all 0.2s;
         }
         
         .form-group input:focus,
         .form-group select:focus,
         .form-group textarea:focus {
             outline: none;
-            border-color: var(--hud-red);
-            box-shadow: 0 0 0 3px rgba(255, 0, 51, 0.1);
-        }
-        
-        .form-group.full {
-            grid-column: 1 / -1;
+            border-color: var(--accent);
         }
         
         .coordinate-inputs {
@@ -805,48 +433,183 @@
             gap: 1rem;
         }
         
-        .modal-footer {
-            padding: 1.5rem 2.5rem;
-            background: rgba(10, 10, 15, 0.9);
-            border-top: 2px solid var(--hud-red);
-            display: flex;
-            justify-content: flex-end;
-            gap: 1.5rem;
+        /* DETAIL VIEW */
+        .detail-container {
+            max-width: 1000px;
+            margin: 0 auto;
         }
         
-        .btn {
-            padding: 1rem 2rem;
-            border-radius: 8px;
-            border: 2px solid;
+        .detail-header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .detail-title {
+            font-size: 2rem;
             font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        
+        .detail-subtitle {
+            font-size: 1rem;
+            color: var(--text-dim);
+        }
+        
+        .detail-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .detail-section {
+            margin-bottom: 2rem;
+        }
+        
+        .detail-section h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--accent);
+        }
+        
+        .detail-text {
+            background: var(--bg-card);
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            line-height: 1.6;
+            color: var(--text-dim);
+        }
+        
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.75rem;
+        }
+        
+        .gallery img {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 8px;
             cursor: pointer;
-            transition: all 0.3s;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+            transition: all 0.2s;
+            border: 1px solid var(--border);
+        }
+        
+        .gallery img:hover {
+            transform: scale(1.05);
+            border-color: var(--accent);
+        }
+        
+        .detail-map {
+            height: 250px;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            margin-bottom: 1rem;
+        }
+        
+        .info-grid {
+            background: var(--bg-card);
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+        
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .info-item:last-child {
+            border-bottom: none;
+        }
+        
+        .info-label {
+            font-size: 0.875rem;
+            color: var(--text-dim);
+        }
+        
+        .info-value {
+            font-weight: 600;
+        }
+        
+        .plan-card {
+            background: var(--bg-card);
+            padding: 1.25rem;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            margin-bottom: 1rem;
+        }
+        
+        .plan-card h4 {
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            color: var(--accent);
+        }
+        
+        .plan-card p {
+            font-size: 0.875rem;
+            color: var(--text-dim);
+            line-height: 1.5;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
         }
         
         .btn-secondary {
             background: transparent;
-            color: var(--hud-text-dim);
-            border-color: var(--hud-text-dim);
+            color: var(--text);
+            border: 1px solid var(--border);
         }
         
         .btn-secondary:hover {
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.05);
         }
         
-        .btn-primary {
-            background: linear-gradient(135deg, var(--hud-red), var(--hud-red-dark));
-            color: white;
-            border-color: var(--hud-red);
-            box-shadow: 0 5px 15px rgba(255, 0, 51, 0.3);
+        .btn-danger {
+            background: transparent;
+            color: var(--danger);
+            border: 1px solid var(--danger);
         }
         
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(255, 0, 51, 0.4);
+        .btn-danger:hover {
+            background: var(--danger);
+            color: var(--text);
         }
         
+        /* EMPTY STATE */
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+        }
+        
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.3;
+        }
+        
+        .empty-state h2 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .empty-state p {
+            color: var(--text-dim);
+            margin-bottom: 1.5rem;
+        }
+        
+        /* PHOTO VIEWER */
         .photo-viewer {
             display: none;
             position: fixed;
@@ -854,8 +617,8 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.98);
-            z-index: 3000;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 2000;
             align-items: center;
             justify-content: center;
             padding: 2rem;
@@ -865,92 +628,92 @@
             max-width: 90%;
             max-height: 90%;
             object-fit: contain;
-            border: 3px solid var(--hud-red);
-            border-radius: 12px;
-            box-shadow: 0 0 50px rgba(255, 0, 51, 0.5);
-        }
-        
-        .error-message {
-            background: rgba(255, 0, 51, 0.1);
-            border: 2px solid var(--hud-red);
             border-radius: 8px;
-            padding: 1rem;
-            margin: 1rem 0;
-            color: var(--hud-red);
-            text-align: center;
-            animation: errorPulse 1s infinite;
         }
         
-        @keyframes errorPulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.7; }
-        }
-        
-        .success-message {
-            background: rgba(0, 255, 136, 0.1);
-            border: 2px solid var(--hud-success);
-            border-radius: 8px;
-            padding: 1rem;
-            margin: 1rem 0;
-            color: var(--hud-success);
-            text-align: center;
-        }
-        
+        /* LOADING */
         .loading {
             display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(255, 0, 51, 0.3);
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border);
             border-radius: 50%;
-            border-top-color: var(--hud-red);
-            animation: spin 1s ease-in-out infinite;
+            border-top-color: var(--accent);
+            animation: spin 1s linear infinite;
         }
         
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
         
+        /* MESSAGE */
+        .message {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem 1.5rem;
+            max-width: 400px;
+            z-index: 9999;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        }
+        
+        .message.success {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+        
+        .message.error {
+            border-color: var(--danger);
+            color: var(--danger);
+        }
+        
+        /* SCROLLBAR */
         ::-webkit-scrollbar {
             width: 8px;
         }
         
         ::-webkit-scrollbar-track {
-            background: var(--hud-bg);
+            background: var(--bg-primary);
         }
         
         ::-webkit-scrollbar-thumb {
-            background: var(--hud-red);
+            background: var(--border);
             border-radius: 4px;
         }
         
         ::-webkit-scrollbar-thumb:hover {
-            background: var(--hud-red-dark);
+            background: #3a3a3a;
         }
         
-        @media (max-width: 1200px) {
-            .app-container {
-                grid-template-columns: 1fr;
+        /* MOBILE */
+        @media (max-width: 1024px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s;
             }
             
-            .sidebar {
-                display: none;
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            
+            .main {
+                margin-left: 0;
             }
             
             .detail-grid {
                 grid-template-columns: 1fr;
             }
             
-            .missions-grid {
-                grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            .grid {
+                grid-template-columns: 1fr;
             }
         }
         
         @media (max-width: 768px) {
             .form-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .missions-grid {
                 grid-template-columns: 1fr;
             }
             
@@ -961,69 +724,82 @@
             .action-buttons {
                 flex-direction: column;
             }
+            
+            .modal {
+                max-width: 100%;
+                border-radius: 0;
+                max-height: 100vh;
+            }
         }
         
-        .terminal-text {
-            font-family: 'Courier New', monospace;
-            color: var(--hud-red);
-            text-shadow: 0 0 10px rgba(255, 0, 51, 0.5);
+        /* LEAFLET CUSTOM */
+        .leaflet-popup-content-wrapper {
+            background: var(--bg-secondary) !important;
+            border: 1px solid var(--border) !important;
+            border-radius: 8px !important;
+            color: var(--text) !important;
+        }
+        
+        .leaflet-popup-content {
+            margin: 1rem !important;
+        }
+        
+        .leaflet-popup-tip {
+            background: var(--bg-secondary) !important;
         }
     </style>
 </head>
 <body>
-    <div class="app-container">
+    <div class="app">
         <aside class="sidebar">
             <div class="logo">
-                <h1>URBEX HUD</h1>
-                <p>IRON MAN MODE</p>
+                <h1>URBEX Tracker</h1>
+                <p>Urban Exploration</p>
             </div>
             
             <nav class="nav">
                 <div class="nav-item active" data-view="missions">
-                    <i>📍</i>
-                    <span>SPOT LIST</span>
+                    <span>📍</span>
+                    <span>Spot List</span>
                 </div>
                 <div class="nav-item" data-view="map">
-                    <i>🗺️</i>
-                    <span>MAP VIEW</span>
+                    <span>🗺️</span>
+                    <span>Map View</span>
                 </div>
                 <div class="nav-item" data-view="archive">
-                    <i>📁</i>
-                    <span>ARCHIVE</span>
+                    <span>📁</span>
+                    <span>Archive</span>
                 </div>
             </nav>
             
             <div class="stats">
                 <div class="stat">
-                    <span>TOTAL SPOTS</span>
+                    <span>Total Spots</span>
                     <span class="stat-value" id="total-spots">0</span>
                 </div>
                 <div class="stat">
-                    <span>TO EXPLORE</span>
+                    <span>To Explore</span>
                     <span class="stat-value" id="planned-spots">0</span>
                 </div>
                 <div class="stat">
-                    <span>EXPLORED</span>
+                    <span>Explored</span>
                     <span class="stat-value" id="explored-spots">0</span>
                 </div>
             </div>
         </aside>
 
-        <main class="main-content">
-            <div class="top-bar">
-                <div class="page-title" id="page-title">SPOT LIST</div>
-                <button class="hud-btn" id="add-mission-btn">
-                    <i>+</i>
-                    ADD NEW SPOT
-                </button>
+        <main class="main">
+            <div class="header">
+                <h1 class="page-title" id="page-title">Spot List</h1>
+                <button class="btn" id="add-mission-btn">+ Add Spot</button>
             </div>
 
-            <div class="content-area">
+            <div class="content">
                 <div id="missions-view">
-                    <div class="missions-grid" id="missions-container">
-                        <div style="grid-column: 1 / -1; text-align: center; padding: 4rem 2rem;">
-                            <div class="loading" style="width: 50px; height: 50px; margin: 0 auto 1rem;"></div>
-                            <p style="color: var(--hud-text-dim);">Loading spots...</p>
+                    <div class="grid" id="missions-container">
+                        <div class="empty-state" style="grid-column: 1 / -1;">
+                            <div class="loading"></div>
+                            <p style="margin-top: 1rem;">Loading spots...</p>
                         </div>
                     </div>
                 </div>
@@ -1035,9 +811,9 @@
                 </div>
 
                 <div id="archive-view" style="display: none;">
-                    <div style="text-align: center; padding: 4rem 2rem; color: var(--hud-text-dim);">
-                        <div style="font-size: 4rem; margin-bottom: 1rem; opacity: 0.5;">📁</div>
-                        <h2 style="color: var(--hud-text); margin-bottom: 0.5rem;">ARCHIVE</h2>
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📁</div>
+                        <h2>Archive</h2>
                         <p>Your explored spots will appear here</p>
                     </div>
                 </div>
@@ -1048,7 +824,7 @@
     <div class="modal-overlay" id="detail-modal">
         <div class="modal">
             <div class="modal-header">
-                <h2 id="detail-title">SPOT DETAILS</h2>
+                <h2 id="detail-title">Spot Details</h2>
                 <button class="close-btn" id="close-detail">×</button>
             </div>
             <div class="modal-body" id="detail-body"></div>
@@ -1058,82 +834,76 @@
     <div class="modal-overlay" id="mission-modal">
         <div class="modal">
             <div class="modal-header">
-                <h2 id="modal-title">ADD NEW SPOT</h2>
+                <h2 id="modal-title">Add New Spot</h2>
                 <button class="close-btn" id="close-modal">×</button>
             </div>
             <div class="modal-body">
                 <form id="mission-form">
                     <div class="form-grid">
                         <div class="form-group">
-                            <label for="mission-name">SPOT NAME</label>
+                            <label for="mission-name">Spot Name</label>
                             <input type="text" id="mission-name" required>
                         </div>
                         <div class="form-group">
-                            <label for="mission-location">LOCATION</label>
+                            <label for="mission-location">Location</label>
                             <input type="text" id="mission-location" required>
                         </div>
                         <div class="form-group">
-                            <label for="mission-status">STATUS</label>
+                            <label for="mission-status">Status</label>
                             <select id="mission-status">
-                                <option value="planned">TO EXPLORE</option>
-                                <option value="active">EXPLORING</option>
-                                <option value="completed">EXPLORED</option>
+                                <option value="planned">To Explore</option>
+                                <option value="active">Exploring</option>
+                                <option value="completed">Explored</option>
                             </select>
                         </div>
                         <div class="form-group">
-                            <label for="mission-date">PLANNED DATE</label>
+                            <label for="mission-date">Planned Date</label>
                             <input type="date" id="mission-date">
                         </div>
                         <div class="form-group full">
-                            <label for="mission-coords">COORDINATES</label>
+                            <label>Coordinates</label>
                             <div class="coordinate-inputs">
-                                <input type="text" id="mission-lat" placeholder="LATITUDE (45.4642)" required>
-                                <input type="text" id="mission-lng" placeholder="LONGITUDE (9.1900)" required>
+                                <input type="text" id="mission-lat" placeholder="Latitude (45.4642)" required>
+                                <input type="text" id="mission-lng" placeholder="Longitude (9.1900)" required>
                             </div>
                         </div>
                         <div class="form-group full">
-                            <label for="mission-desc">DESCRIPTION</label>
+                            <label for="mission-desc">Description</label>
                             <textarea id="mission-desc" rows="4" required placeholder="Tell the story of this place..."></textarea>
                         </div>
                         <div class="form-group">
-                            <label for="mission-plan-a">MAIN ACCESS</label>
+                            <label for="mission-plan-a">Main Access</label>
                             <textarea id="mission-plan-a" rows="3" placeholder="How to get in..."></textarea>
                         </div>
                         <div class="form-group">
-                            <label for="mission-plan-b">ALTERNATIVE ACCESS</label>
+                            <label for="mission-plan-b">Alternative Access</label>
                             <textarea id="mission-plan-b" rows="3" placeholder="Backup plan..."></textarea>
                         </div>
                         <div class="form-group full">
-                            <label for="mission-photos">PHOTO URLs (one per line)</label>
+                            <label for="mission-photos">Photo URLs (one per line)</label>
                             <textarea id="mission-photos" rows="3" placeholder="https://example.com/photo1.jpg"></textarea>
                         </div>
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" id="cancel-btn">CANCEL</button>
-                <button type="submit" form="mission-form" class="btn btn-primary" id="save-btn">SAVE SPOT</button>
+                <button type="button" class="btn btn-secondary" id="cancel-btn">Cancel</button>
+                <button type="submit" form="mission-form" class="btn" id="save-btn">Save Spot</button>
             </div>
         </div>
     </div>
 
     <div class="photo-viewer" id="photo-viewer">
-        <button class="close-btn" id="close-viewer" style="position: absolute; top: 20px; right: 20px;">×</button>
+        <button class="close-btn" id="close-viewer" style="position: absolute; top: 2rem; right: 2rem;">×</button>
         <img id="viewer-image" src="" alt="">
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        // ==============================
-        // CONFIGURAZIONE
-        // ==============================
         const API_URL = window.location.hostname === 'localhost' 
             ? 'http://localhost:3000/api' 
             : '/api';
         
-        // ==============================
-        // VARIABILI GLOBALI
-        // ==============================
         let map = null;
         let markers = [];
         let missions = [];
@@ -1141,9 +911,6 @@
         let editingMissionId = null;
         let currentDetailMissionId = null;
         
-        // ==============================
-        // FUNZIONI API
-        // ==============================
         async function fetchSpots() {
             try {
                 const response = await fetch(`${API_URL}/spots`);
@@ -1156,14 +923,13 @@
                 return data;
             } catch (error) {
                 console.error('Error fetching spots:', error);
-                missionsContainer.innerHTML = `
-                    <div style="grid-column: 1 / -1; text-align: center; padding: 4rem 2rem; color: var(--hud-red);">
-                        <div style="font-size: 4rem; margin-bottom: 1rem;">⚠️</div>
-                        <h2 style="margin-bottom: 0.5rem;">CONNECTION ERROR</h2>
-                        <p style="margin-bottom: 1.5rem;">Cannot connect to server. Make sure backend is running.</p>
-                        <button class="hud-btn" style="margin: 0 auto;" onclick="fetchSpots()">
-                            🔄 RETRY
-                        </button>
+                const container = document.getElementById('missions-container');
+                container.innerHTML = `
+                    <div class="empty-state" style="grid-column: 1 / -1;">
+                        <div class="empty-state-icon">⚠️</div>
+                        <h2>Connection Error</h2>
+                        <p>Cannot connect to server. Make sure backend is running.</p>
+                        <button class="btn" onclick="fetchSpots()">Retry</button>
                     </div>
                 `;
                 return [];
@@ -1218,19 +984,10 @@
             }
         }
         
-        // ==============================
-        // FUNZIONI UI
-        // ==============================
         function showMessage(message, type) {
             const div = document.createElement('div');
-            div.className = type === 'error' ? 'error-message' : 'success-message';
+            div.className = `message ${type}`;
             div.textContent = message;
-            div.style.position = 'fixed';
-            div.style.top = '20px';
-            div.style.right = '20px';
-            div.style.zIndex = '9999';
-            div.style.maxWidth = '300px';
-            
             document.body.appendChild(div);
             setTimeout(() => div.remove(), 3000);
         }
@@ -1264,24 +1021,10 @@
                     const marker = L.marker([mission.lat, mission.lng])
                         .addTo(map)
                         .bindPopup(`
-                            <div style="font-family: 'Orbitron', monospace;">
-                                <h3 style="color: #ff0033; margin: 0 0 10px 0;">${mission.name}</h3>
-                                <p style="margin: 5px 0;">📍 ${mission.location}</p>
-                                <p style="margin: 5px 0; color: #ffd700;">${mission.status.toUpperCase()}</p>
-                                <button onclick="showInList('${mission._id}')" style="
-                                    background: linear-gradient(135deg, #ff0033, #cc0029);
-                                    color: white; border: none; padding: 8px 12px;
-                                    border-radius: 4px; cursor: pointer; font-weight: bold;
-                                    width: 100%; margin-top: 5px;
-                                ">SHOW IN LIST</button>
-                                ${mission.lat && mission.lng ? `
-                                <button onclick="openInGoogleMaps(${mission.lat}, ${mission.lng})" style="
-                                    background: linear-gradient(135deg, #00ff88, #00cc6a);
-                                    color: #0a0a0f; border: none; padding: 8px 12px;
-                                    border-radius: 4px; cursor: pointer; font-weight: bold;
-                                    width: 100%; margin-top: 5px;
-                                ">OPEN IN GOOGLE MAPS</button>
-                                ` : ''}
+                            <div>
+                                <h3 style="margin: 0 0 8px 0; font-size: 1rem;">${mission.name}</h3>
+                                <p style="margin: 4px 0; font-size: 0.875rem;">📍 ${mission.location}</p>
+                                <button onclick="showInList('${mission._id}')" class="btn" style="width: 100%; margin-top: 8px; padding: 8px;">View Details</button>
                             </div>
                         `);
                     markers.push(marker);
@@ -1294,9 +1037,6 @@
             }
         }
         
-        // ==============================
-        // FUNZIONI FRONTEND
-        // ==============================
         function switchView(view) {
             currentView = view;
             document.querySelectorAll('.nav-item').forEach(item => {
@@ -1308,8 +1048,8 @@
             });
             
             document.getElementById('page-title').textContent = 
-                view === 'missions' ? 'SPOT LIST' :
-                view === 'map' ? 'MAP VIEW' : 'ARCHIVE';
+                view === 'missions' ? 'Spot List' :
+                view === 'map' ? 'Map View' : 'Archive';
             
             if (view === 'map') {
                 setTimeout(() => {
@@ -1324,13 +1064,11 @@
             
             if (missions.length === 0) {
                 container.innerHTML = `
-                    <div style="grid-column: 1 / -1; text-align: center; padding: 4rem 2rem; color: var(--hud-text-dim);">
-                        <div style="font-size: 4rem; margin-bottom: 1rem; opacity: 0.5;">📍</div>
-                        <h2 style="color: var(--hud-text); margin-bottom: 0.5rem;">NO SPOTS YET</h2>
-                        <p style="margin-bottom: 1.5rem;">Add your first urbex spot to get started</p>
-                        <button class="hud-btn" style="margin: 0 auto;" onclick="showAddMissionModal()">
-                            + ADD FIRST SPOT
-                        </button>
+                    <div class="empty-state" style="grid-column: 1 / -1;">
+                        <div class="empty-state-icon">📍</div>
+                        <h2>No Spots Yet</h2>
+                        <p>Add your first urbex spot to get started</p>
+                        <button class="btn" onclick="showAddMissionModal()">Add First Spot</button>
                     </div>
                 `;
                 return;
@@ -1339,38 +1077,35 @@
             container.innerHTML = '';
             missions.forEach(mission => {
                 const card = document.createElement('div');
-                card.className = 'mission-card';
-                card.dataset.id = mission._id;
+                card.className = 'card';
                 
                 let statusText = '', statusClass = '';
                 switch(mission.status) {
-                    case 'planned': statusText = 'TO EXPLORE'; statusClass = 'status-planned'; break;
-                    case 'active': statusText = 'EXPLORING'; statusClass = 'status-active'; break;
-                    case 'completed': statusText = 'EXPLORED'; statusClass = 'status-completed'; break;
+                    case 'planned': statusText = 'To Explore'; statusClass = 'badge-planned'; break;
+                    case 'active': statusText = 'Exploring'; statusClass = 'badge-active'; break;
+                    case 'completed': statusText = 'Explored'; statusClass = 'badge-completed'; break;
                 }
                 
-                const date = mission.date ? new Date(mission.date).toLocaleDateString('it-IT') : 'NO DATE';
+                const date = mission.date ? new Date(mission.date).toLocaleDateString('it-IT') : 'No date';
                 const mainPhoto = mission.photos && mission.photos.length > 0 
                     ? mission.photos[0] 
-                    : 'https://images.unsplash.com/photo-1519681393784-d120267933ba?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
+                    : 'https://images.unsplash.com/photo-1519681393784-d120267933ba?w=800&q=80';
                 
                 card.innerHTML = `
-                    <img src="${mainPhoto}" alt="${mission.name}" class="mission-image">
-                    <div class="mission-content">
-                        <div class="mission-header">
-                            <h3 class="mission-title">${mission.name}</h3>
-                            <div class="mission-status ${statusClass}">${statusText}</div>
+                    <img src="${mainPhoto}" alt="${mission.name}" class="card-image">
+                    <div class="card-content">
+                        <div class="card-header">
+                            <h3 class="card-title">${mission.name}</h3>
+                            <div class="badge ${statusClass}">${statusText}</div>
                         </div>
-                        <p class="mission-location">📍 ${mission.location}</p>
+                        <p class="card-location">📍 ${mission.location}</p>
                         ${mission.lat && mission.lng ? `
-                            <p class="mission-coordinates">🌍 ${mission.lat.toFixed(4)}, ${mission.lng.toFixed(4)}</p>
+                            <p class="card-coords">${mission.lat.toFixed(4)}, ${mission.lng.toFixed(4)}</p>
                         ` : ''}
-                        <p class="mission-description">${mission.description.substring(0, 120)}...</p>
-                        <div class="mission-footer">
-                            <div class="mission-date">📅 ${date}</div>
-                            <button class="hud-btn" style="padding: 0.5rem 1rem; font-size: 0.85rem;" onclick="showMissionDetail('${mission._id}')">
-                                VIEW DETAILS
-                            </button>
+                        <p class="card-description">${mission.description}</p>
+                        <div class="card-footer">
+                            <div class="card-date">📅 ${date}</div>
+                            <button class="btn-small" onclick="showMissionDetail('${mission._id}')">View</button>
                         </div>
                     </div>
                 `;
@@ -1386,36 +1121,36 @@
             
             let statusText = '';
             switch(mission.status) {
-                case 'planned': statusText = 'TO EXPLORE'; break;
-                case 'active': statusText = 'EXPLORING'; break;
-                case 'completed': statusText = 'EXPLORED'; break;
+                case 'planned': statusText = 'To Explore'; break;
+                case 'active': statusText = 'Exploring'; break;
+                case 'completed': statusText = 'Explored'; break;
             }
             
             const date = mission.date ? new Date(mission.date).toLocaleDateString('it-IT', {
                 weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
-            }) : 'NO DATE SET';
+            }) : 'No date set';
             
             document.getElementById('detail-title').textContent = mission.name;
             document.getElementById('detail-body').innerHTML = `
-                <div class="detail-presentation">
+                <div class="detail-container">
                     <div class="detail-header">
                         <h1 class="detail-title">${mission.name}</h1>
-                        <div class="detail-subtitle">${mission.location}</div>
+                        <div class="detail-subtitle">📍 ${mission.location}</div>
                     </div>
                     
                     <div class="detail-grid">
                         <div>
                             <div class="detail-section">
-                                <h3>DESCRIPTION</h3>
-                                <div class="story-box">${mission.description}</div>
+                                <h3>Description</h3>
+                                <div class="detail-text">${mission.description}</div>
                             </div>
                             
                             ${mission.photos && mission.photos.length > 0 ? `
                             <div class="detail-section">
-                                <h3>PHOTOS</h3>
+                                <h3>Photos</h3>
                                 <div class="gallery">
-                                    ${mission.photos.map((photo, index) => `
-                                        <img src="${photo}" alt="Photo ${index + 1}" onclick="viewPhoto('${photo}')">
+                                    ${mission.photos.map((photo, i) => `
+                                        <img src="${photo}" alt="Photo ${i + 1}" onclick="viewPhoto('${photo}')">
                                     `).join('')}
                                 </div>
                             </div>
@@ -1425,35 +1160,43 @@
                         <div>
                             ${mission.lat && mission.lng ? `
                             <div class="detail-section">
-                                <h3>LOCATION MAP</h3>
+                                <h3>Location</h3>
                                 <div class="detail-map" id="detail-map"></div>
-                                <p style="margin-top: 1rem; color: var(--hud-red); font-family: monospace; text-align: center;">
-                                    📍 ${mission.lat.toFixed(6)}, ${mission.lng.toFixed(6)}
+                                <p style="margin-top: 0.5rem; font-size: 0.75rem; color: var(--text-dim); text-align: center; font-family: monospace;">
+                                    ${mission.lat.toFixed(6)}, ${mission.lng.toFixed(6)}
                                 </p>
+                                <button class="btn" style="width: 100%; margin-top: 1rem;" onclick="openInGoogleMaps(${mission.lat}, ${mission.lng})">
+                                    🗺️ Open in Google Maps
+                                </button>
                             </div>
                             ` : ''}
                             
                             <div class="detail-section">
-                                <h3>MISSION INFO</h3>
-                                <div style="background: rgba(10, 10, 15, 0.7); border-radius: 10px; padding: 1.5rem;">
-                                    <p><strong>STATUS:</strong> <span style="color: var(--hud-red);">${statusText}</span></p>
-                                    <p><strong>PLANNED DATE:</strong> ${date}</p>
-                                    <p><strong>LOCATION:</strong> ${mission.location}</p>
+                                <h3>Info</h3>
+                                <div class="info-grid">
+                                    <div class="info-item">
+                                        <span class="info-label">Status</span>
+                                        <span class="info-value">${statusText}</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <span class="info-label">Date</span>
+                                        <span class="info-value">${date}</span>
+                                    </div>
                                 </div>
                             </div>
                             
                             ${mission.planA || mission.planB ? `
                             <div class="detail-section">
-                                <h3>ACCESS PLANS</h3>
+                                <h3>Access Plans</h3>
                                 ${mission.planA ? `
                                     <div class="plan-card">
-                                        <h4>PLAN A</h4>
+                                        <h4>Plan A</h4>
                                         <p>${mission.planA}</p>
                                     </div>
                                 ` : ''}
                                 ${mission.planB ? `
                                     <div class="plan-card">
-                                        <h4>PLAN B</h4>
+                                        <h4>Plan B</h4>
                                         <p>${mission.planB}</p>
                                     </div>
                                 ` : ''}
@@ -1463,20 +1206,8 @@
                     </div>
                     
                     <div class="action-buttons">
-                        ${mission.lat && mission.lng ? `
-                        <button class="action-btn maps" onclick="openInGoogleMaps(${mission.lat}, ${mission.lng})">
-                            <span>🗺️</span>
-                            OPEN IN GOOGLE MAPS
-                        </button>
-                        ` : ''}
-                        <button class="action-btn list" onclick="editMission('${mission._id}')">
-                            <span>✏️</span>
-                            EDIT SPOT
-                        </button>
-                        <button class="action-btn" style="border-color: #ff0000; color: #ff0000;" onclick="deleteSpot('${mission._id}')">
-                            <span>🗑️</span>
-                            DELETE
-                        </button>
+                        <button class="btn" onclick="editMission('${mission._id}')">✏️ Edit</button>
+                        <button class="btn btn-danger" onclick="deleteSpot('${mission._id}')">🗑️ Delete</button>
                     </div>
                 </div>
             `;
@@ -1484,13 +1215,8 @@
             if (mission.lat && mission.lng) {
                 setTimeout(() => {
                     const detailMap = L.map('detail-map').setView([mission.lat, mission.lng], 15);
-                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                        attribution: '© OpenStreetMap'
-                    }).addTo(detailMap);
-                    L.marker([mission.lat, mission.lng])
-                        .addTo(detailMap)
-                        .bindPopup(`<strong>${mission.name}</strong>`)
-                        .openPopup();
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(detailMap);
+                    L.marker([mission.lat, mission.lng]).addTo(detailMap);
                 }, 100);
             }
             
@@ -1499,21 +1225,15 @@
         
         window.showInList = function(id) {
             switchView('missions');
-            setTimeout(() => {
-                const card = document.querySelector(`.mission-card[data-id="${id}"]`);
-                if (card) {
-                    card.classList.add('highlighted');
-                    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }
-            }, 500);
+            setTimeout(() => showMissionDetail(id), 300);
         };
         
         window.openInGoogleMaps = function(lat, lng) {
             window.open(`https://www.google.com/maps?q=${lat},${lng}`, '_blank');
         };
         
-        window.viewPhoto = function(photoUrl) {
-            document.getElementById('viewer-image').src = photoUrl;
+        window.viewPhoto = function(url) {
+            document.getElementById('viewer-image').src = url;
             document.getElementById('photo-viewer').style.display = 'flex';
         };
         
@@ -1522,7 +1242,7 @@
             if (!mission) return;
             
             editingMissionId = id;
-            document.getElementById('modal-title').textContent = 'EDIT SPOT';
+            document.getElementById('modal-title').textContent = 'Edit Spot';
             
             document.getElementById('mission-name').value = mission.name;
             document.getElementById('mission-location').value = mission.location;
@@ -1541,7 +1261,7 @@
         
         function showAddMissionModal() {
             editingMissionId = null;
-            document.getElementById('modal-title').textContent = 'ADD NEW SPOT';
+            document.getElementById('modal-title').textContent = 'Add New Spot';
             document.getElementById('mission-form').reset();
             
             const today = new Date();
@@ -1557,16 +1277,11 @@
             document.getElementById('detail-modal').style.display = 'none';
         }
         
-        // ==============================
-        // EVENT LISTENERS
-        // ==============================
         document.addEventListener('DOMContentLoaded', async () => {
-            // Navigation
             document.querySelectorAll('.nav-item').forEach(item => {
                 item.addEventListener('click', () => switchView(item.dataset.view));
             });
             
-            // Buttons
             document.getElementById('add-mission-btn').addEventListener('click', showAddMissionModal);
             document.getElementById('close-modal').addEventListener('click', () => {
                 document.getElementById('mission-modal').style.display = 'none';
@@ -1579,7 +1294,6 @@
                 document.getElementById('mission-modal').style.display = 'none';
             });
             
-            // Form submission
             document.getElementById('mission-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 
@@ -1589,7 +1303,7 @@
                     .filter(url => url.length > 0);
                 
                 const spotData = {
-                    name: document.getElementById('mission-name').value.toUpperCase(),
+                    name: document.getElementById('mission-name').value,
                     location: document.getElementById('mission-location').value,
                     status: document.getElementById('mission-status').value,
                     date: document.getElementById('mission-date').value || null,
@@ -1598,7 +1312,7 @@
                     description: document.getElementById('mission-desc').value,
                     planA: document.getElementById('mission-plan-a').value,
                     planB: document.getElementById('mission-plan-b').value,
-                    photos: photos.length > 0 ? photos : ['https://images.unsplash.com/photo-1519681393784-d120267933ba?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80']
+                    photos: photos.length > 0 ? photos : ['https://images.unsplash.com/photo-1519681393784-d120267933ba?w=800&q=80']
                 };
                 
                 try {
@@ -1609,7 +1323,6 @@
                 }
             });
             
-            // Modal overlays
             document.getElementById('mission-modal').addEventListener('click', (e) => {
                 if (e.target === document.getElementById('mission-modal')) {
                     document.getElementById('mission-modal').style.display = 'none';
@@ -1628,11 +1341,9 @@
                 }
             });
             
-            // Initialize
             await fetchSpots();
             initMap();
             
-            // Auto-refresh every 30 seconds
             setInterval(fetchSpots, 30000);
         });
     </script>
