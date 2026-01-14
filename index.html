@@ -1533,26 +1533,47 @@
         
         async function saveSpot(spotData) {
             try {
-                // Upload foto prima se necessario
+                // PER NUOVO SPOT: Upload foto
                 if (uploadedPhotos.length > 0 && !editingMissionId) {
                     const photoUrls = await uploadPhotos();
                     spotData.photos = photoUrls;
                 }
-                
-                const url = editingMissionId 
+                // PER EDITING: Mantieni le foto esistenti e aggiungi le nuove
+                else if (uploadedPhotos.length > 0 && editingMissionId) {
+                    // Filtra le foto esistenti (quelle con URL già completo)
+                    const existingPhotos = uploadedPhotos.filter(photo => 
+                        photo.dataUrl && photo.dataUrl.startsWith('http')
+                    ).map(photo => photo.dataUrl);
+                    
+                    // Filtra le nuove foto (quelle con data URL)
+                    const newPhotos = uploadedPhotos.filter(photo => 
+                        photo.dataUrl && photo.dataUrl.startsWith('data:')
+                    );
+                    
+                    // Upload nuove foto se ce ne sono
+                    let newPhotoUrls = [];
+                    if (newPhotos.length > 0) {
+                        newPhotoUrls = await uploadPhotos();
+                    }
+                    
+                    // Combina foto esistenti e nuove
+                    spotData.photos = [...existingPhotos, ...newPhotoUrls];
+                }
+               
+                const url = editingMissionId
                     ? `${API_URL}/spots/${editingMissionId}`
                     : `${API_URL}/spots`;
-                
+               
                 const method = editingMissionId ? 'PUT' : 'POST';
-                
+               
                 const response = await fetch(url, {
                     method: method,
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(spotData)
                 });
-                
+               
                 if (!response.ok) throw new Error('Save failed');
-                
+               
                 showMessage('Spot saved successfully!', 'success');
                 await fetchSpots();
                 return await response.json();
