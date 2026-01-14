@@ -7,7 +7,6 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css">
     <style>
         :root {
             --bg-primary: #0a0a0a;
@@ -212,10 +211,19 @@
             transform: translateY(-2px);
         }
        
-        .card-image {
+        .card-image-container {
             width: 100%;
             height: 180px;
-            object-fit: cover;
+            overflow: hidden;
+            position: relative;
+            background: var(--bg-primary);
+        }
+       
+        .card-image {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            background: var(--bg-primary);
         }
        
         .card-content {
@@ -482,12 +490,14 @@
             border-radius: 8px;
             overflow: hidden;
             aspect-ratio: 1;
+            background: var(--bg-primary);
         }
        
         .photo-preview img {
             width: 100%;
             height: 100%;
-            object-fit: cover;
+            object-fit: contain;
+            background: var(--bg-primary);
         }
        
         .remove-photo {
@@ -602,19 +612,24 @@
             gap: 0.75rem;
         }
        
-        .gallery img {
-            width: 100%;
-            height: 120px;
-            object-fit: cover;
+        .gallery-item {
+            background: var(--bg-primary);
             border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.2s;
+            overflow: hidden;
             border: 1px solid var(--border);
+            cursor: pointer;
         }
        
-        .gallery img:hover {
-            transform: scale(1.05);
+        .gallery-item img {
+            width: 100%;
+            height: 120px;
+            object-fit: contain;
+            background: var(--bg-primary);
+        }
+       
+        .gallery-item:hover {
             border-color: var(--accent);
+            transform: scale(1.05);
         }
        
         .detail-map {
@@ -741,94 +756,6 @@
             max-height: 90%;
             object-fit: contain;
             border-radius: 8px;
-        }
-       
-        /* CROP MODAL */
-        .crop-modal {
-            max-width: 90vw;
-            max-height: 90vh;
-            width: 800px;
-        }
-       
-        .crop-container {
-            width: 100%;
-            height: 400px;
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            overflow: hidden;
-            margin-bottom: 1rem;
-        }
-       
-        .crop-container img {
-            max-width: 100%;
-            max-height: 100%;
-        }
-       
-        .crop-controls {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-        }
-       
-        .crop-aspect-ratios {
-            display: flex;
-            gap: 0.5rem;
-            flex-wrap: wrap;
-        }
-       
-        .crop-aspect-btn {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            color: var(--text-dim);
-            padding: 0.5rem 1rem;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 0.875rem;
-            transition: all 0.2s;
-        }
-       
-        .crop-aspect-btn:hover {
-            border-color: var(--accent);
-            color: var(--accent);
-        }
-       
-        .crop-aspect-btn.active {
-            background: rgba(0, 255, 136, 0.1);
-            border-color: var(--accent);
-            color: var(--accent);
-        }
-       
-        .crop-zoom-controls {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-       
-        .crop-zoom-controls input {
-            flex: 1;
-        }
-       
-        .crop-actions {
-            display: flex;
-            gap: 1rem;
-            justify-content: center;
-        }
-       
-        .crop-preview {
-            width: 100px;
-            height: 100px;
-            border: 2px solid var(--border);
-            border-radius: 8px;
-            overflow: hidden;
-            margin: 0 auto;
-        }
-       
-        .crop-preview img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
         }
        
         /* LOADING */
@@ -1058,25 +985,12 @@
                 padding: 1.25rem;
             }
            
-            /* Crop modal su mobile */
-            .crop-modal {
-                width: 100%;
-                height: 100vh;
-                max-height: 100vh;
-                max-width: 100vw;
-                border-radius: 0;
-            }
-           
-            .crop-container {
-                height: 50vh;
-            }
-           
             /* Gallery su mobile */
             .gallery {
                 grid-template-columns: repeat(2, 1fr);
             }
            
-            .gallery img {
+            .gallery-item img {
                 height: 150px;
             }
            
@@ -1111,7 +1025,7 @@
                 grid-template-columns: 1fr;
             }
            
-            .gallery img {
+            .gallery-item img {
                 height: 200px;
             }
            
@@ -1133,10 +1047,6 @@
            
             .bottom-nav-item span {
                 font-size: 0.65rem;
-            }
-           
-            .crop-aspect-ratios {
-                justify-content: center;
             }
         }
        
@@ -1373,65 +1283,12 @@
         </div>
     </div>
 
-    <!-- CROP MODAL -->
-    <div class="modal-overlay" id="crop-modal">
-        <div class="modal crop-modal">
-            <div class="modal-header">
-                <h2>Crop Image</h2>
-                <button class="close-btn" id="close-crop-modal">×</button>
-            </div>
-            <div class="modal-body">
-                <div class="crop-container">
-                    <img id="crop-image" src="" alt="Crop preview">
-                </div>
-               
-                <div class="crop-controls">
-                    <div class="crop-aspect-ratios">
-                        <button type="button" class="crop-aspect-btn active" data-ratio="16/9">16:9 (Wide)</button>
-                        <button type="button" class="crop-aspect-btn" data-ratio="4/3">4:3 (Standard)</button>
-                        <button type="button" class="crop-aspect-btn" data-ratio="1/1">1:1 (Square)</button>
-                        <button type="button" class="crop-aspect-btn" data-ratio="free">Free</button>
-                    </div>
-                   
-                    <div class="crop-zoom-controls">
-                        <span>🔍</span>
-                        <input type="range" id="crop-zoom" min="0.1" max="3" step="0.1" value="1">
-                        <span>🔎</span>
-                    </div>
-                   
-                    <div class="crop-actions">
-                        <button type="button" class="btn btn-secondary" id="rotate-left">
-                            <i class="fas fa-undo"></i> Rotate Left
-                        </button>
-                        <button type="button" class="btn btn-secondary" id="rotate-right">
-                            <i class="fas fa-redo"></i> Rotate Right
-                        </button>
-                        <button type="button" class="btn btn-secondary" id="reset-crop">
-                            <i class="fas fa-sync"></i> Reset
-                        </button>
-                    </div>
-                </div>
-               
-                <div class="crop-preview">
-                    <img id="crop-preview-img" src="" alt="Crop preview">
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" id="cancel-crop">Cancel</button>
-                <button type="button" class="btn" id="apply-crop">
-                    <i class="fas fa-check"></i> Apply Crop
-                </button>
-            </div>
-        </div>
-    </div>
-
     <div class="photo-viewer" id="photo-viewer">
         <button class="close-btn" id="close-viewer" style="position: absolute; top: 2rem; right: 2rem;">×</button>
         <img id="viewer-image" src="" alt="">
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
     <script>
         const API_URL = window.location.hostname === 'localhost'
             ? 'http://localhost:3000/api'
@@ -1445,9 +1302,6 @@
         let currentDetailMissionId = null;
         let uploadedPhotos = [];
         let isMobile = window.innerWidth <= 1024;
-        let currentCropper = null;
-        let currentCropFile = null;
-        let cropQueue = [];
        
         // Funzione per analizzare le coordinate
         function parseCoordinates(input) {
@@ -1523,192 +1377,7 @@
             );
         }
        
-        // Setup per il cropping delle immagini
-        function setupImageCropper() {
-            const cropImage = document.getElementById('crop-image');
-            const cropPreview = document.getElementById('crop-preview-img');
-            const cropZoom = document.getElementById('crop-zoom');
-            const rotateLeft = document.getElementById('rotate-left');
-            const rotateRight = document.getElementById('rotate-right');
-            const resetCrop = document.getElementById('reset-crop');
-            const aspectButtons = document.querySelectorAll('.crop-aspect-btn');
-            const applyCrop = document.getElementById('apply-crop');
-            const cancelCrop = document.getElementById('cancel-crop');
-            const closeCropModal = document.getElementById('close-crop-modal');
-           
-            // Inizializza cropper
-            function initCropper() {
-                if (currentCropper) {
-                    currentCropper.destroy();
-                }
-               
-                currentCropper = new Cropper(cropImage, {
-                    aspectRatio: 16/9,
-                    viewMode: 1,
-                    preview: cropPreview,
-                    guides: true,
-                    center: true,
-                    highlight: false,
-                    cropBoxResizable: true,
-                    cropBoxMovable: true,
-                    toggleDragModeOnDblclick: false,
-                    ready() {
-                        cropZoom.value = 1;
-                    },
-                    crop(event) {
-                        // Aggiorna zoom slider
-                        const scaleX = event.detail.scaleX || 1;
-                        cropZoom.value = scaleX;
-                    }
-                });
-            }
-           
-            // Setup aspect ratio buttons
-            aspectButtons.forEach(btn => {
-                btn.addEventListener('click', function() {
-                    aspectButtons.forEach(b => b.classList.remove('active'));
-                    this.classList.add('active');
-                   
-                    const ratio = this.dataset.ratio;
-                    if (ratio === 'free') {
-                        currentCropper.setAspectRatio(NaN);
-                    } else {
-                        const [w, h] = ratio.split('/').map(Number);
-                        currentCropper.setAspectRatio(w / h);
-                    }
-                });
-            });
-           
-            // Zoom control
-            cropZoom.addEventListener('input', function() {
-                if (currentCropper) {
-                    currentCropper.zoomTo(parseFloat(this.value));
-                }
-            });
-           
-            // Rotate controls
-            rotateLeft.addEventListener('click', () => {
-                if (currentCropper) {
-                    currentCropper.rotate(-90);
-                }
-            });
-           
-            rotateRight.addEventListener('click', () => {
-                if (currentCropper) {
-                    currentCropper.rotate(90);
-                }
-            });
-           
-            // Reset crop
-            resetCrop.addEventListener('click', () => {
-                if (currentCropper) {
-                    currentCropper.reset();
-                    cropZoom.value = 1;
-                    aspectButtons[0].click(); // Reset to 16:9
-                }
-            });
-           
-            // Apply crop
-            applyCrop.addEventListener('click', async () => {
-                if (!currentCropper || !currentCropFile) return;
-               
-                try {
-                    // Ottieni canvas ritagliato
-                    const canvas = currentCropper.getCroppedCanvas({
-                        width: 800,
-                        height: 450,
-                        imageSmoothingEnabled: true,
-                        imageSmoothingQuality: 'high'
-                    });
-                   
-                    // Converti canvas in blob
-                    canvas.toBlob(async (blob) => {
-                        // Crea un nuovo file con il blob ritagliato
-                        const croppedFile = new File([blob], currentCropFile.name, {
-                            type: 'image/jpeg',
-                            lastModified: Date.now()
-                        });
-                       
-                        // Converti in data URL per preview
-                        const reader = new FileReader();
-                        reader.onload = function(e) {
-                            const photoData = {
-                                id: Date.now() + Math.random(),
-                                dataUrl: e.target.result,
-                                file: croppedFile,
-                                originalFile: currentCropFile
-                            };
-                           
-                            uploadedPhotos.push(photoData);
-                            updatePhotoPreview();
-                           
-                            // Chiudi modal e processa la prossima immagine in coda
-                            closeCropModal();
-                            processNextCrop();
-                        };
-                        reader.readAsDataURL(croppedFile);
-                       
-                    }, 'image/jpeg', 0.9);
-                } catch (error) {
-                    console.error('Error cropping image:', error);
-                    showMessage('Error cropping image', 'error');
-                }
-            });
-           
-            // Cancel crop
-            cancelCrop.addEventListener('click', () => {
-                closeCropModal();
-                processNextCrop();
-            });
-           
-            closeCropModal.addEventListener('click', () => {
-                closeCropModal();
-                processNextCrop();
-            });
-           
-            // Chiudi modal cliccando all'esterno
-            document.getElementById('crop-modal').addEventListener('click', (e) => {
-                if (e.target === document.getElementById('crop-modal')) {
-                    closeCropModal();
-                    processNextCrop();
-                }
-            });
-        }
-       
-        function openCropModal(file) {
-            currentCropFile = file;
-            const reader = new FileReader();
-           
-            reader.onload = function(e) {
-                document.getElementById('crop-modal').style.display = 'flex';
-                document.getElementById('crop-image').src = e.target.result;
-               
-                // Inizializza cropper dopo che l'immagine è caricata
-                setTimeout(() => {
-                    initCropper();
-                }, 100);
-            };
-           
-            reader.readAsDataURL(file);
-        }
-       
-        function closeCropModal() {
-            document.getElementById('crop-modal').style.display = 'none';
-            if (currentCropper) {
-                currentCropper.destroy();
-                currentCropper = null;
-            }
-            currentCropFile = null;
-        }
-       
-        function processNextCrop() {
-            if (cropQueue.length > 0) {
-                const nextFile = cropQueue.shift();
-                openCropModal(nextFile);
-            }
-        }
-       
-        // Gestione upload foto con cropping
+        // Gestione upload foto
         function setupPhotoUpload() {
             const dropArea = document.getElementById('photo-drop-area');
             const fileInput = document.getElementById('photo-input');
@@ -1773,14 +1442,18 @@
                         return;
                     }
                    
-                    // Se è la prima immagine, apri direttamente il crop modal
-                    // Altrimenti metti in coda
-                    if (cropQueue.length === 0 && !currentCropFile) {
-                        openCropModal(file);
-                    } else {
-                        cropQueue.push(file);
-                        showMessage(`Added ${file.name} to crop queue`, 'success');
-                    }
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const photoData = {
+                            id: Date.now() + Math.random(),
+                            dataUrl: e.target.result,
+                            file: file
+                        };
+                       
+                        uploadedPhotos.push(photoData);
+                        updatePhotoPreview();
+                    };
+                    reader.readAsDataURL(file);
                 });
                
                 fileInput.value = '';
@@ -1809,20 +1482,15 @@
                 });
             }
            
-            // Inizializza il cropper
-            setupImageCropper();
-           
             // Pulisci le foto quando si chiude il modal
             document.getElementById('close-modal').addEventListener('click', () => {
                 uploadedPhotos = [];
                 updatePhotoPreview();
-                cropQueue = [];
             });
            
             document.getElementById('cancel-btn').addEventListener('click', () => {
                 uploadedPhotos = [];
                 updatePhotoPreview();
-                cropQueue = [];
             });
         }
        
@@ -1858,18 +1526,11 @@
            
             try {
                 const formData = new FormData();
-                
-                // Aggiungi solo i file che non sono già stati uploadati (hanno un file object)
                 uploadedPhotos.forEach(photo => {
-                    if (photo.file && !photo.dataUrl.startsWith('http')) {
+                    if (photo.file) {
                         formData.append('photos', photo.file);
                     }
                 });
-               
-                // Se non ci sono nuovi file da uploadare, ritorna gli URL esistenti
-                if (formData.getAll('photos').length === 0) {
-                    return uploadedPhotos.map(photo => photo.dataUrl);
-                }
                
                 const response = await fetch(`${API_URL}/upload`, {
                     method: 'POST',
@@ -1881,14 +1542,8 @@
                 return data.urls || [];
             } catch (error) {
                 console.error('Error uploading photos:', error);
-                // Fallback: usa data URLs per le nuove immagini
-                return uploadedPhotos.map(photo => {
-                    if (photo.dataUrl.startsWith('data:')) {
-                        // Se è una data URL, prova a convertire in blob e inviare
-                        return photo.dataUrl;
-                    }
-                    return photo.dataUrl;
-                });
+                // Fallback: usa data URLs
+                return uploadedPhotos.map(photo => photo.dataUrl);
             }
         }
        
@@ -2143,7 +1798,9 @@
                     : 'https://images.unsplash.com/photo-1519681393784-d120267933ba?w=800&q=80';
                
                 card.innerHTML = `
-                    <img src="${mainPhoto}" alt="${mission.name}" class="card-image">
+                    <div class="card-image-container">
+                        <img src="${mainPhoto}" alt="${mission.name}" class="card-image">
+                    </div>
                     <div class="card-content">
                         <div class="card-header">
                             <h3 class="card-title">${mission.name}</h3>
@@ -2201,7 +1858,9 @@
                                 <h3>Photos</h3>
                                 <div class="gallery">
                                     ${mission.photos.map((photo, i) => `
-                                        <img src="${photo}" alt="Photo ${i + 1}" onclick="viewPhoto('${photo}')">
+                                        <div class="gallery-item">
+                                            <img src="${photo}" alt="Photo ${i + 1}" onclick="viewPhoto('${photo}')">
+                                        </div>
                                     `).join('')}
                                 </div>
                             </div>
@@ -2296,7 +1955,6 @@
            
             editingMissionId = id;
             uploadedPhotos = [];
-            cropQueue = [];
             document.getElementById('modal-title').textContent = 'Edit Spot';
            
             document.getElementById('mission-name').value = mission.name;
@@ -2332,7 +1990,6 @@
         function showAddMissionModal() {
             editingMissionId = null;
             uploadedPhotos = [];
-            cropQueue = [];
             document.getElementById('modal-title').textContent = 'Add New Spot';
             document.getElementById('mission-form').reset();
            
@@ -2389,7 +2046,7 @@
         }
        
         document.addEventListener('DOMContentLoaded', async () => {
-            // Setup upload foto con cropping
+            // Setup upload foto
             setupPhotoUpload();
            
             // Setup mobile layout se necessario
@@ -2408,7 +2065,6 @@
             document.getElementById('close-modal').addEventListener('click', () => {
                 document.getElementById('mission-modal').style.display = 'none';
                 uploadedPhotos = [];
-                cropQueue = [];
                 document.getElementById('photo-preview').innerHTML = '';
             });
            
@@ -2421,7 +2077,6 @@
             document.getElementById('cancel-btn').addEventListener('click', () => {
                 document.getElementById('mission-modal').style.display = 'none';
                 uploadedPhotos = [];
-                cropQueue = [];
                 document.getElementById('photo-preview').innerHTML = '';
             });
            
@@ -2430,7 +2085,6 @@
                 if (e.target === document.getElementById('mission-modal')) {
                     document.getElementById('mission-modal').style.display = 'none';
                     uploadedPhotos = [];
-                    cropQueue = [];
                     document.getElementById('photo-preview').innerHTML = '';
                 }
             });
@@ -2480,7 +2134,6 @@
                     await saveSpot(spotData);
                     document.getElementById('mission-modal').style.display = 'none';
                     uploadedPhotos = [];
-                    cropQueue = [];
                     document.getElementById('photo-preview').innerHTML = '';
                 } catch (error) {
                     console.error('Save error:', error);
