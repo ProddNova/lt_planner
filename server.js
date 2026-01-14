@@ -168,7 +168,7 @@ app.delete('/api/spots/:id', async (req, res) => {
     }
 });
 
-// Endpoint per upload foto
+// Endpoint per upload foto con ottimizzazione
 app.post('/api/upload', upload.array('photos', 10), async (req, res) => {
     try {
         if (!req.files || req.files.length === 0) {
@@ -183,16 +183,36 @@ app.post('/api/upload', upload.array('photos', 10), async (req, res) => {
                 const thumbnailFilename = `thumb-${file.filename}`;
                 const thumbnailPath = path.join('uploads', thumbnailFilename);
                
+                // Ottimizza l'immagine principale (mantenendo le proporzioni)
                 await sharp(file.path)
-                    .resize(400, 400, { fit: 'inside' })
+                    .resize(1200, 800, { 
+                        fit: 'inside',
+                        withoutEnlargement: true 
+                    })
+                    .jpeg({ quality: 85 })
+                    .toFile(path.join('uploads', `optimized-${file.filename}`));
+               
+                // Crea thumbnail
+                await sharp(file.path)
+                    .resize(400, 300, { 
+                        fit: 'cover',
+                        position: 'center'
+                    })
+                    .jpeg({ quality: 80 })
                     .toFile(thumbnailPath);
                
-                // URL per l'immagine originale e thumbnail
+                // URL per l'immagine ottimizzata e thumbnail
                 const baseUrl = `${req.protocol}://${req.get('host')}`;
-                photoUrls.push(`${baseUrl}/uploads/${file.filename}`);
+                photoUrls.push(`${baseUrl}/uploads/optimized-${file.filename}`);
+               
+                // Cancella il file originale non ottimizzato
+                fs.unlinkSync(file.path);
+               
             } catch (error) {
                 console.error('Error processing image:', error);
-                photoUrls.push(`${req.protocol}://${req.get('host')}/uploads/${file.filename}`);
+                // Fallback: usa il file originale
+                const baseUrl = `${req.protocol}://${req.get('host')}`;
+                photoUrls.push(`${baseUrl}/uploads/${file.filename}`);
             }
         }
        
@@ -213,14 +233,13 @@ app.delete('/api/photos/:filename', (req, res) => {
         const filename = req.params.filename;
         const filePath = path.join(__dirname, 'uploads', filename);
         const thumbPath = path.join(__dirname, 'uploads', `thumb-${filename}`);
+        const optimizedPath = path.join(__dirname, 'uploads', `optimized-${filename}`);
        
-        if (fs.existsSync(filePath)) {
-            fs.unlinkSync(filePath);
-        }
-       
-        if (fs.existsSync(thumbPath)) {
-            fs.unlinkSync(thumbPath);
-        }
+        [filePath, thumbPath, optimizedPath].forEach(path => {
+            if (fs.existsSync(path)) {
+                fs.unlinkSync(path);
+            }
+        });
        
         res.json({ message: 'Photo deleted' });
     } catch (error) {
@@ -249,14 +268,13 @@ app.delete('/api/spots/:id/photos', async (req, res) => {
             const filename = path.basename(photoUrl);
             const filePath = path.join(__dirname, 'uploads', filename);
             const thumbPath = path.join(__dirname, 'uploads', `thumb-${filename}`);
+            const optimizedPath = path.join(__dirname, 'uploads', `optimized-${filename}`);
            
-            if (fs.existsSync(filePath)) {
-                fs.unlinkSync(filePath);
-            }
-           
-            if (fs.existsSync(thumbPath)) {
-                fs.unlinkSync(thumbPath);
-            }
+            [filePath, thumbPath, optimizedPath].forEach(path => {
+                if (fs.existsSync(path)) {
+                    fs.unlinkSync(path);
+                }
+            });
         }
        
         res.json({ message: 'Photo removed from spot', spot });
@@ -316,8 +334,8 @@ app.get('/api/health', (req, res) => {
 app.get('/api', (req, res) => {
     res.json({
         message: 'URBEX HUD API',
-        version: '1.3.0',
-        features: ['photo-upload', 'mobile-optimized', 'coordinates-parser', 'photo-preservation'],
+        version: '1.4.0',
+        features: ['photo-upload', 'mobile-optimized', 'coordinates-parser', 'photo-cropping', 'image-optimization'],
         endpoints: {
             spots: 'GET/POST /api/spots',
             spot: 'GET/PUT/DELETE /api/spots/:id',
@@ -537,10 +555,12 @@ async function startServer() {
             console.log(`📸 Uploads: http://localhost:${PORT}/uploads/`);
             console.log(`🧪 Test DB: http://localhost:${PORT}/api/test`);
             console.log(`📊 Health: http://localhost:${PORT}/api/health`);
-            console.log('\n✨ NOVITÀ DELLA VERSIONE 1.3.0:');
-            console.log('• Fix: Le foto ora vengono conservate durante l\'editing');
-            console.log('• Nuovo: API per rimuovere singole foto dagli spot');
-            console.log('• Migliorata: Gestione foto su backend');
+            console.log('\n✨ NOVITÀ DELLA VERSIONE 1.4.0:');
+            console.log('• Feature: Crop delle immagini con modal dedicato');
+            console.log('• Feature: Seleziona aspect ratio (16:9, 4:3, 1:1, Free)');
+            console.log('• Feature: Ruota e zoom delle immagini');
+            console.log('• Miglioramento: Ottimizzazione automatica delle immagini');
+            console.log('• Fix: Le immagini non vengono più stretchate');
         });
     } else {
         // Avvia senza database
