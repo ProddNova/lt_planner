@@ -30,7 +30,8 @@ const storage = multer.diskStorage({
     },
     filename: function (req, file, cb) {
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, uniqueSuffix + path.extname(file.originalname));
+        const ext = path.extname(file.originalname);
+        cb(null, uniqueSuffix + ext);
     }
 });
 
@@ -38,7 +39,7 @@ const fileFilter = (req, file, cb) => {
     const allowedTypes = /jpeg|jpg|png|gif|webp/;
     const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
     const mimetype = allowedTypes.test(file.mimetype);
-    
+   
     if (mimetype && extname) {
         return cb(null, true);
     } else {
@@ -46,7 +47,7 @@ const fileFilter = (req, file, cb) => {
     }
 };
 
-const upload = multer({ 
+const upload = multer({
     storage: storage,
     fileFilter: fileFilter,
     limits: {
@@ -58,10 +59,10 @@ const upload = multer({
 const spotSchema = new mongoose.Schema({
     name: { type: String, required: true, trim: true },
     location: { type: String, required: true },
-    status: { 
-        type: String, 
-        enum: ['planned', 'active', 'completed'], 
-        default: 'planned' 
+    status: {
+        type: String,
+        enum: ['planned', 'active', 'completed'],
+        default: 'planned'
     },
     date: { type: Date },
     lat: { type: Number, required: true },
@@ -88,7 +89,7 @@ app.get('/api/spots', async (req, res) => {
         res.json(spots);
     } catch (error) {
         console.error('Error fetching spots:', error);
-        res.status(500).json({ 
+        res.status(500).json({
             error: 'Database error',
             message: 'Impossibile connettersi al database',
             details: error.message
@@ -119,13 +120,22 @@ app.post('/api/spots', async (req, res) => {
 
 app.put('/api/spots/:id', async (req, res) => {
     try {
-        const spot = await Spot.findByIdAndUpdate(
+        const spot = await Spot.findById(req.params.id);
+        if (!spot) return res.status(404).json({ error: 'Spot not found' });
+
+        // Conserva le foto esistenti se non vengono inviate nuove foto
+        const updateData = { ...req.body };
+        if (!updateData.photos && spot.photos) {
+            updateData.photos = spot.photos;
+        }
+
+        const updatedSpot = await Spot.findByIdAndUpdate(
             req.params.id,
-            { ...req.body, updatedAt: Date.now() },
+            { ...updateData, updatedAt: Date.now() },
             { new: true, runValidators: true }
         );
-        if (!spot) return res.status(404).json({ error: 'Spot not found' });
-        res.json(spot);
+        
+        res.json(updatedSpot);
     } catch (error) {
         console.error('Error updating spot:', error);
         res.status(400).json({ error: 'Error updating spot', details: error.message });
@@ -136,7 +146,7 @@ app.delete('/api/spots/:id', async (req, res) => {
     try {
         const spot = await Spot.findById(req.params.id);
         if (!spot) return res.status(404).json({ error: 'Spot not found' });
-        
+       
         // Cancella le foto associate
         if (spot.photos && spot.photos.length > 0) {
             spot.photos.forEach(photoUrl => {
@@ -149,7 +159,7 @@ app.delete('/api/spots/:id', async (req, res) => {
                 }
             });
         }
-        
+       
         await Spot.findByIdAndDelete(req.params.id);
         res.json({ message: 'Spot deleted' });
     } catch (error) {
@@ -164,19 +174,19 @@ app.post('/api/upload', upload.array('photos', 10), async (req, res) => {
         if (!req.files || req.files.length === 0) {
             return res.status(400).json({ error: 'No files uploaded' });
         }
-        
+       
         const photoUrls = [];
-        
+       
         for (const file of req.files) {
             try {
                 // Crea thumbnail
                 const thumbnailFilename = `thumb-${file.filename}`;
                 const thumbnailPath = path.join('uploads', thumbnailFilename);
-                
+               
                 await sharp(file.path)
                     .resize(400, 400, { fit: 'inside' })
                     .toFile(thumbnailPath);
-                
+               
                 // URL per l'immagine originale e thumbnail
                 const baseUrl = `${req.protocol}://${req.get('host')}`;
                 photoUrls.push(`${baseUrl}/uploads/${file.filename}`);
@@ -185,8 +195,8 @@ app.post('/api/upload', upload.array('photos', 10), async (req, res) => {
                 photoUrls.push(`${req.protocol}://${req.get('host')}/uploads/${file.filename}`);
             }
         }
-        
-        res.json({ 
+       
+        res.json({
             message: 'Photos uploaded successfully',
             urls: photoUrls,
             count: req.files.length
@@ -197,25 +207,62 @@ app.post('/api/upload', upload.array('photos', 10), async (req, res) => {
     }
 });
 
-// Endpoint per cancellare foto
+// Endpoint per cancellare foto specifiche
 app.delete('/api/photos/:filename', (req, res) => {
     try {
         const filename = req.params.filename;
         const filePath = path.join(__dirname, 'uploads', filename);
         const thumbPath = path.join(__dirname, 'uploads', `thumb-${filename}`);
-        
+       
         if (fs.existsSync(filePath)) {
             fs.unlinkSync(filePath);
         }
-        
+       
         if (fs.existsSync(thumbPath)) {
             fs.unlinkSync(thumbPath);
         }
-        
+       
         res.json({ message: 'Photo deleted' });
     } catch (error) {
         console.error('Error deleting photo:', error);
         res.status(500).json({ error: 'Error deleting photo' });
+    }
+});
+
+// Endpoint per cancellare foto da uno spot (mantenendo le altre)
+app.delete('/api/spots/:id/photos', async (req, res) => {
+    try {
+        const { photoUrl } = req.body;
+        if (!photoUrl) {
+            return res.status(400).json({ error: 'Photo URL required' });
+        }
+       
+        const spot = await Spot.findById(req.params.id);
+        if (!spot) return res.status(404).json({ error: 'Spot not found' });
+       
+        // Rimuovi la foto dall'array
+        spot.photos = spot.photos.filter(photo => photo !== photoUrl);
+        await spot.save();
+       
+        // Cancella il file fisico se è un upload locale
+        if (photoUrl.includes('/uploads/')) {
+            const filename = path.basename(photoUrl);
+            const filePath = path.join(__dirname, 'uploads', filename);
+            const thumbPath = path.join(__dirname, 'uploads', `thumb-${filename}`);
+           
+            if (fs.existsSync(filePath)) {
+                fs.unlinkSync(filePath);
+            }
+           
+            if (fs.existsSync(thumbPath)) {
+                fs.unlinkSync(thumbPath);
+            }
+        }
+       
+        res.json({ message: 'Photo removed from spot', spot });
+    } catch (error) {
+        console.error('Error removing photo:', error);
+        res.status(500).json({ error: 'Error removing photo' });
     }
 });
 
@@ -227,24 +274,24 @@ app.get('/api/test', async (req, res) => {
             connectionState: connectionState,
             state: ['disconnected', 'connected', 'connecting', 'disconnecting'][connectionState]
         };
-        
+       
         if (connectionState === 1) {
             const ping = await mongoose.connection.db.admin().ping();
             dbInfo.ping = ping;
             dbInfo.databaseName = mongoose.connection.db.databaseName;
             dbInfo.collections = await mongoose.connection.db.listCollections().toArray();
         }
-        
-        res.json({ 
+       
+        res.json({
             status: connectionState === 1 ? 'OK' : 'ERROR',
             message: connectionState === 1 ? 'Database connesso' : 'Database non connesso',
             ...dbInfo
         });
     } catch (error) {
-        res.status(500).json({ 
-            status: 'ERROR', 
+        res.status(500).json({
+            status: 'ERROR',
             message: error.message,
-            connectionState: mongoose.connection.readyState 
+            connectionState: mongoose.connection.readyState
         });
     }
 });
@@ -254,8 +301,8 @@ app.get('/api/health', (req, res) => {
     const state = mongoose.connection.readyState;
     const uploadsDir = path.join(__dirname, 'uploads');
     const hasUploadsDir = fs.existsSync(uploadsDir);
-    
-    res.json({ 
+   
+    res.json({
         status: state === 1 ? 'healthy' : 'unhealthy',
         database: state === 1 ? 'connected' : 'disconnected',
         databaseState: ['disconnected', 'connected', 'connecting', 'disconnecting'][state],
@@ -267,15 +314,16 @@ app.get('/api/health', (req, res) => {
 
 // Info API
 app.get('/api', (req, res) => {
-    res.json({ 
+    res.json({
         message: 'URBEX HUD API',
-        version: '1.2.0',
-        features: ['photo-upload', 'mobile-optimized', 'coordinates-parser'],
+        version: '1.3.0',
+        features: ['photo-upload', 'mobile-optimized', 'coordinates-parser', 'photo-preservation'],
         endpoints: {
             spots: 'GET/POST /api/spots',
             spot: 'GET/PUT/DELETE /api/spots/:id',
             upload: 'POST /api/upload',
             deletePhoto: 'DELETE /api/photos/:filename',
+            deleteSpotPhoto: 'DELETE /api/spots/:id/photos',
             test: 'GET /api/test',
             health: 'GET /api/health'
         },
@@ -287,18 +335,18 @@ app.get('/api', (req, res) => {
 app.post('/api/parse-coordinates', (req, res) => {
     try {
         const { input } = req.body;
-        
+       
         if (!input) {
             return res.status(400).json({ error: 'No input provided' });
         }
-        
+       
         const parsed = parseCoordinates(input);
-        
+       
         if (parsed) {
             res.json({ success: true, coordinates: parsed });
         } else {
-            res.status(400).json({ 
-                success: false, 
+            res.status(400).json({
+                success: false,
                 error: 'Invalid coordinate format',
                 suggestions: [
                     'Format: "latitude,longitude" (e.g., 45.4642,9.1900)',
@@ -314,7 +362,7 @@ app.post('/api/parse-coordinates', (req, res) => {
 // Funzione helper per parse coordinates
 function parseCoordinates(input) {
     input = input.trim();
-    
+   
     // Se è un link Google Maps
     if (input.includes('google.com/maps') || input.includes('maps.app.goo.gl')) {
         try {
@@ -327,7 +375,7 @@ function parseCoordinates(input) {
                     return { lat: coords[0], lng: coords[1] };
                 }
             }
-            
+           
             // Prova con @ formato (es: @45.4642,9.1900,15z)
             const match = input.match(/@(-?\d+\.?\d*),(-?\d+\.?\d*)/);
             if (match) {
@@ -337,7 +385,7 @@ function parseCoordinates(input) {
             // Continua con altri metodi
         }
     }
-    
+   
     // Se è nel formato "lat,lng"
     const parts = input.split(',');
     if (parts.length === 2) {
@@ -347,7 +395,7 @@ function parseCoordinates(input) {
             return { lat, lng };
         }
     }
-    
+   
     // Se è nel formato "lat lng"
     const parts2 = input.split(/[\s,;]+/);
     if (parts2.length >= 2) {
@@ -357,7 +405,7 @@ function parseCoordinates(input) {
             return { lat, lng };
         }
     }
-    
+   
     return null;
 }
 
@@ -370,7 +418,7 @@ app.get('*', (req, res) => {
 async function connectToDatabase() {
     try {
         console.log('🔄 Connessione a MongoDB Atlas...');
-        
+       
         const options = {
             useNewUrlParser: true,
             useUnifiedTopology: true,
@@ -379,15 +427,15 @@ async function connectToDatabase() {
             retryWrites: true,
             w: 'majority'
         };
-        
+       
         await mongoose.connect(MONGODB_URI, options);
         console.log('✅ Connesso a MongoDB Atlas');
         console.log(`📊 Database: ${mongoose.connection.db.databaseName}`);
-        
+       
         // Test ping
         await mongoose.connection.db.admin().ping();
         console.log('📡 Database risponde correttamente');
-        
+       
         return true;
     } catch (error) {
         console.error('❌ ERRORE CONNESSIONE MONGODB:', error.message);
@@ -396,7 +444,7 @@ async function connectToDatabase() {
         console.log('2. Controlla che la password sia corretta: Prova019283');
         console.log('3. Controlla che l\'utente abbia permessi');
         console.log('4. Stringa usata:', MONGODB_URI.replace(/Prova019283/, '***'));
-        
+       
         return false;
     }
 }
@@ -406,7 +454,7 @@ async function seedDatabase() {
     try {
         const count = await Spot.countDocuments();
         console.log(`📊 Documenti nel database: ${count}`);
-        
+       
         if (count === 0) {
             console.log('📦 Inserimento dati di esempio...');
             const sampleSpots = [
@@ -442,7 +490,7 @@ async function seedDatabase() {
             await Spot.insertMany(sampleSpots);
             console.log('✅ Dati di esempio inseriti');
         }
-        
+       
         // Crea directory uploads se non esiste
         const uploadsDir = path.join(__dirname, 'uploads');
         if (!fs.existsSync(uploadsDir)) {
@@ -457,12 +505,12 @@ async function seedDatabase() {
 // Avvio server
 async function startServer() {
     const PORT = process.env.PORT || 10000;
-    
+   
     // Installa dipendenze mancanti
     try {
         const requiredModules = ['multer', 'sharp'];
         console.log('📦 Verifica dipendenze...');
-        
+       
         for (const module of requiredModules) {
             try {
                 require.resolve(module);
@@ -474,14 +522,14 @@ async function startServer() {
     } catch (error) {
         console.log('⚠️ Non è stato possibile verificare le dipendenze');
     }
-    
+   
     // Prova a connetterti
     const connected = await connectToDatabase();
-    
+   
     if (connected) {
         // Inserisci dati di esempio e crea cartelle
         await seedDatabase();
-        
+       
         app.listen(PORT, () => {
             console.log(`\n🎉 SERVER AVVIATO CON SUCCESSO!`);
             console.log(`🌐 Frontend: http://localhost:${PORT}`);
@@ -489,11 +537,10 @@ async function startServer() {
             console.log(`📸 Uploads: http://localhost:${PORT}/uploads/`);
             console.log(`🧪 Test DB: http://localhost:${PORT}/api/test`);
             console.log(`📊 Health: http://localhost:${PORT}/api/health`);
-            console.log('\n✨ NOVITÀ DELLA VERSIONE:');
-            console.log('• Upload foto dal dispositivo');
-            console.log('• Ottimizzazione mobile completa');
-            console.log('• Mappa interattiva su mobile');
-            console.log('• Input coordinate semplificato');
+            console.log('\n✨ NOVITÀ DELLA VERSIONE 1.3.0:');
+            console.log('• Fix: Le foto ora vengono conservate durante l\'editing');
+            console.log('• Nuovo: API per rimuovere singole foto dagli spot');
+            console.log('• Migliorata: Gestione foto su backend');
         });
     } else {
         // Avvia senza database
