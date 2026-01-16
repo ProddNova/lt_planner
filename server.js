@@ -63,17 +63,14 @@ const spotSchema = new mongoose.Schema({
     location: { type: String, required: true },
     status: {
         type: String,
-        enum: ['planned', 'completed'],
+        enum: ['planned', 'completed'], // Rimosso 'active'
         default: 'planned'
     },
     lat: { type: Number, required: true },
     lng: { type: Number, required: true },
     description: { type: String, required: true },
     planA: { type: String },
-    alternativeSpots: [{ 
-        type: mongoose.Schema.Types.ObjectId, 
-        ref: 'Spot' 
-    }],
+    alternativeSpots: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Spot' }], // Nuovo campo per spots alternativi
     photos: [{ type: String }],
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now }
@@ -89,9 +86,7 @@ const Spot = mongoose.model('Spot', spotSchema);
 // API Routes
 app.get('/api/spots', async (req, res) => {
     try {
-        const spots = await Spot.find()
-            .sort({ createdAt: -1 })
-            .populate('alternativeSpots', 'name location');
+        const spots = await Spot.find().sort({ createdAt: -1 });
         res.json(spots);
     } catch (error) {
         console.error('Error fetching spots:', error);
@@ -105,8 +100,7 @@ app.get('/api/spots', async (req, res) => {
 
 app.get('/api/spots/:id', async (req, res) => {
     try {
-        const spot = await Spot.findById(req.params.id)
-            .populate('alternativeSpots', 'name location lat lng');
+        const spot = await Spot.findById(req.params.id);
         if (!spot) return res.status(404).json({ error: 'Spot not found' });
         res.json(spot);
     } catch (error) {
@@ -114,9 +108,27 @@ app.get('/api/spots/:id', async (req, res) => {
     }
 });
 
+app.get('/api/spots-minimal', async (req, res) => {
+    try {
+        const spots = await Spot.find({}, 'name _id location status').sort({ name: 1 });
+        res.json(spots);
+    } catch (error) {
+        console.error('Error fetching minimal spots:', error);
+        res.status(500).json({ error: 'Database error' });
+    }
+});
+
 app.post('/api/spots', async (req, res) => {
     try {
-        const spot = new Spot(req.body);
+        // Converti alternativeSpots da array di stringhe a array di ObjectId
+        const spotData = { ...req.body };
+        if (spotData.alternativeSpots && Array.isArray(spotData.alternativeSpots)) {
+            spotData.alternativeSpots = spotData.alternativeSpots
+                .filter(id => mongoose.Types.ObjectId.isValid(id))
+                .map(id => new mongoose.Types.ObjectId(id));
+        }
+        
+        const spot = new Spot(spotData);
         const savedSpot = await spot.save();
         res.status(201).json(savedSpot);
     } catch (error) {
@@ -134,6 +146,13 @@ app.put('/api/spots/:id', async (req, res) => {
         const updateData = { ...req.body };
         if (!updateData.photos && spot.photos) {
             updateData.photos = spot.photos;
+        }
+
+        // Converti alternativeSpots da array di stringhe a array di ObjectId
+        if (updateData.alternativeSpots && Array.isArray(updateData.alternativeSpots)) {
+            updateData.alternativeSpots = updateData.alternativeSpots
+                .filter(id => mongoose.Types.ObjectId.isValid(id))
+                .map(id => new mongoose.Types.ObjectId(id));
         }
 
         const updatedSpot = await Spot.findByIdAndUpdate(
@@ -363,7 +382,7 @@ app.get('/api/health', (req, res) => {
 app.get('/api', (req, res) => {
     res.json({
         message: 'URBEX HUD API',
-        version: '3.1.0',
+        version: '4.0.0',
         features: ['photo-upload', 'mobile-optimized', 'coordinates-parser', 'iphone-support', 'heic-conversion', 'alternative-spots'],
         limits: {
             maxFileSize: '10MB',
@@ -373,6 +392,7 @@ app.get('/api', (req, res) => {
         endpoints: {
             spots: 'GET/POST /api/spots',
             spot: 'GET/PUT/DELETE /api/spots/:id',
+            spotsMinimal: 'GET /api/spots-minimal',
             upload: 'POST /api/upload',
             deletePhoto: 'DELETE /api/photos/:filename',
             test: 'GET /api/test',
@@ -508,6 +528,8 @@ async function seedDatabase() {
        
         if (count === 0) {
             console.log('📦 Inserimento dati di esempio...');
+            
+            // Inserisci prima gli spot per avere ID validi
             const sampleSpots = [
                 {
                     name: "EX MANIFATTURA TABACCHI",
@@ -532,10 +554,34 @@ async function seedDatabase() {
                     photos: [
                         "https://images.unsplash.com/photo-1551601651-2a8555f1a136?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
                     ]
+                },
+                {
+                    name: "GHOST VILLAGE",
+                    location: "Abruzzo, Italy",
+                    status: "planned",
+                    lat: 42.0800,
+                    lng: 13.6500,
+                    description: "Completely abandoned medieval village.",
+                    planA: "Hiking trail from nearby town",
+                    photos: [
+                        "https://images.unsplash.com/photo-1544551763-46a013bb70d5?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+                    ]
                 }
             ];
-            await Spot.insertMany(sampleSpots);
+            
+            const insertedSpots = await Spot.insertMany(sampleSpots);
             console.log('✅ Dati di esempio inseriti');
+            
+            // Ora aggiungi alternative spots ai primi due spot
+            if (insertedSpots.length >= 3) {
+                await Spot.findByIdAndUpdate(insertedSpots[0]._id, {
+                    alternativeSpots: [insertedSpots[1]._id, insertedSpots[2]._id]
+                });
+                
+                await Spot.findByIdAndUpdate(insertedSpots[1]._id, {
+                    alternativeSpots: [insertedSpots[0]._id]
+                });
+            }
         }
        
         // Crea directory uploads se non esiste
@@ -584,12 +630,13 @@ async function startServer() {
             console.log(`📸 Uploads: http://localhost:${PORT}/uploads/`);
             console.log(`🧪 Test DB: http://localhost:${PORT}/api/test`);
             console.log(`📊 Health: http://localhost:${PORT}/api/health`);
-            console.log('\n✨ VERSIONE 3.1.0 - MODIFICHE COMPLETATE:');
-            console.log('• Fix: Bottone View ora funziona correttamente');
-            console.log('• Feature: Mappa usa Google Satellite');
-            console.log('• Removed: Planned date e status "exploring" rimossi');
-            console.log('• Feature: Alternative spots (max 3) invece di alternative access');
-            console.log('• Performance: Popolamento automatico degli spots alternativi');
+            console.log('\n✨ VERSIONE 4.0.0 - MODIFICHE APPLICATE:');
+            console.log('• Fix: Tasto View ora funziona correttamente');
+            console.log('• Feature: Mappa con satellite Google');
+            console.log('• Rimozione: Planned Date rimosso');
+            console.log('• Rimozione: Stato "Exploring" rimosso (solo planned/completed)');
+            console.log('• Nuovo: Alternative Spots (selezione fino a 3 spot esistenti)');
+            console.log('• Miglioramento: API /api/spots-minimal per selezione alternative');
         });
     } else {
         // Avvia senza database
