@@ -10,7 +10,8 @@ const app = express();
 
 // Middleware
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(express.static(__dirname));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
@@ -36,14 +37,14 @@ const storage = multer.diskStorage({
 });
 
 const fileFilter = (req, file, cb) => {
-    const allowedTypes = /jpeg|jpg|png|gif|webp/;
+    const allowedTypes = /jpeg|jpg|png|gif|webp|heic|heif/;
     const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
     const mimetype = allowedTypes.test(file.mimetype);
    
     if (mimetype && extname) {
         return cb(null, true);
     } else {
-        cb(new Error('Only image files are allowed'));
+        cb(new Error('Only image files are allowed (JPEG, PNG, GIF, WEBP, HEIC)'));
     }
 };
 
@@ -51,7 +52,8 @@ const upload = multer({
     storage: storage,
     fileFilter: fileFilter,
     limits: {
-        fileSize: 10 * 1024 * 1024 // 10MB max
+        fileSize: 10 * 1024 * 1024, // 10MB max per file
+        files: 5 // Max 5 files
     }
 });
 
@@ -168,8 +170,33 @@ app.delete('/api/spots/:id', async (req, res) => {
     }
 });
 
-// Endpoint per upload foto semplice
-app.post('/api/upload', upload.array('photos', 10), async (req, res) => {
+// Funzione helper per convertire HEIC/HEIF in JPEG
+async function convertHeicToJpeg(filePath) {
+    try {
+        // Se non è HEIC, ritorna il percorso originale
+        if (!filePath.toLowerCase().endsWith('.heic') && !filePath.toLowerCase().endsWith('.heif')) {
+            return filePath;
+        }
+
+        const jpegPath = filePath.replace(/\.[^/.]+$/, ".jpg");
+        
+        // Converti HEIC a JPEG usando sharp
+        await sharp(filePath)
+            .jpeg({ quality: 85 })
+            .toFile(jpegPath);
+        
+        // Cancella il file HEIC originale
+        fs.unlinkSync(filePath);
+        
+        return jpegPath;
+    } catch (error) {
+        console.error('Error converting HEIC to JPEG:', error);
+        return filePath; // Ritorna il file originale in caso di errore
+    }
+}
+
+// Endpoint per upload foto ottimizzato per iPhone
+app.post('/api/upload', upload.array('photos', 5), async (req, res) => {
     try {
         if (!req.files || req.files.length === 0) {
             return res.status(400).json({ error: 'No files uploaded' });
@@ -179,12 +206,32 @@ app.post('/api/upload', upload.array('photos', 10), async (req, res) => {
        
         for (const file of req.files) {
             try {
-                // Crea thumbnail semplice
+                // Converti HEIC in JPEG se necessario
+                let processedFilePath = file.path;
+                if (file.originalname.toLowerCase().endsWith('.heic') || 
+                    file.originalname.toLowerCase().endsWith('.heif')) {
+                    processedFilePath = await convertHeicToJpeg(file.path);
+                    file.filename = file.filename.replace(/\.[^/.]+$/, ".jpg");
+                }
+
+                // Crea thumbnail
                 const thumbnailFilename = `thumb-${file.filename}`;
                 const thumbnailPath = path.join('uploads', thumbnailFilename);
                
-                // Crea thumbnail mantendo le proporzioni (cover)
-                await sharp(file.path)
+                // Ottimizza l'immagine per il web
+                await sharp(processedFilePath)
+                    .resize(1200, 1200, { 
+                        fit: 'inside',
+                        withoutEnlargement: true 
+                    })
+                    .jpeg({ 
+                        quality: 85,
+                        mozjpeg: true 
+                    })
+                    .toFile(path.join('uploads', `optimized-${file.filename}`));
+               
+                // Crea thumbnail quadrata per anteprime
+                await sharp(processedFilePath)
                     .resize(400, 400, { 
                         fit: 'cover',
                         position: 'center'
@@ -192,9 +239,14 @@ app.post('/api/upload', upload.array('photos', 10), async (req, res) => {
                     .jpeg({ quality: 80 })
                     .toFile(thumbnailPath);
                
-                // URL per l'immagine e thumbnail
+                // URL per l'immagine ottimizzata
                 const baseUrl = `${req.protocol}://${req.get('host')}`;
-                photoUrls.push(`${baseUrl}/uploads/${file.filename}`);
+                photoUrls.push(`${baseUrl}/uploads/optimized-${file.filename}`);
+               
+                // Cancella il file originale non ottimizzato
+                if (fs.existsSync(processedFilePath) && processedFilePath !== path.join('uploads', `optimized-${file.filename}`)) {
+                    fs.unlinkSync(processedFilePath);
+                }
                
             } catch (error) {
                 console.error('Error processing image:', error);
@@ -211,7 +263,27 @@ app.post('/api/upload', upload.array('photos', 10), async (req, res) => {
         });
     } catch (error) {
         console.error('Upload error:', error);
-        res.status(500).json({ error: 'Error uploading photos', details: error.message });
+        
+        if (error instanceof multer.MulterError) {
+            if (error.code === 'LIMIT_FILE_SIZE') {
+                return res.status(400).json({ 
+                    error: 'File too large', 
+                    message: 'Maximum file size is 10MB per image' 
+                });
+            }
+            if (error.code === 'LIMIT_FILE_COUNT') {
+                return res.status(400).json({ 
+                    error: 'Too many files', 
+                    message: 'Maximum 5 photos allowed' 
+                });
+            }
+        }
+        
+        res.status(500).json({ 
+            error: 'Error uploading photos', 
+            details: error.message,
+            suggestion: 'Try with smaller images or different format (JPEG recommended)'
+        });
     }
 });
 
@@ -221,14 +293,13 @@ app.delete('/api/photos/:filename', (req, res) => {
         const filename = req.params.filename;
         const filePath = path.join(__dirname, 'uploads', filename);
         const thumbPath = path.join(__dirname, 'uploads', `thumb-${filename}`);
+        const optimizedPath = path.join(__dirname, 'uploads', `optimized-${filename}`);
        
-        if (fs.existsSync(filePath)) {
-            fs.unlinkSync(filePath);
-        }
-       
-        if (fs.existsSync(thumbPath)) {
-            fs.unlinkSync(thumbPath);
-        }
+        [filePath, thumbPath, optimizedPath].forEach(path => {
+            if (fs.existsSync(path)) {
+                fs.unlinkSync(path);
+            }
+        });
        
         res.json({ message: 'Photo deleted' });
     } catch (error) {
@@ -278,17 +349,37 @@ app.get('/api/health', (req, res) => {
         database: state === 1 ? 'connected' : 'disconnected',
         databaseState: ['disconnected', 'connected', 'connecting', 'disconnecting'][state],
         uploads: hasUploadsDir ? 'available' : 'unavailable',
+        uploadsSize: hasUploadsDir ? getFolderSize(uploadsDir) : 0,
         timestamp: new Date().toISOString(),
         environment: process.env.NODE_ENV || 'development'
     });
 });
 
+// Funzione helper per dimensione cartella
+function getFolderSize(folderPath) {
+    let size = 0;
+    if (fs.existsSync(folderPath)) {
+        const files = fs.readdirSync(folderPath);
+        files.forEach(file => {
+            const filePath = path.join(folderPath, file);
+            const stats = fs.statSync(filePath);
+            size += stats.size;
+        });
+    }
+    return (size / (1024 * 1024)).toFixed(2) + ' MB';
+}
+
 // Info API
 app.get('/api', (req, res) => {
     res.json({
         message: 'URBEX HUD API',
-        version: '1.0.0',
-        features: ['photo-upload', 'mobile-optimized', 'coordinates-parser'],
+        version: '2.0.0',
+        features: ['photo-upload', 'mobile-optimized', 'coordinates-parser', 'iphone-support', 'heic-conversion'],
+        limits: {
+            maxFileSize: '10MB',
+            maxFiles: 5,
+            allowedFormats: ['JPEG', 'PNG', 'GIF', 'WEBP', 'HEIC']
+        },
         endpoints: {
             spots: 'GET/POST /api/spots',
             spot: 'GET/PUT/DELETE /api/spots/:id',
@@ -507,11 +598,12 @@ async function startServer() {
             console.log(`📸 Uploads: http://localhost:${PORT}/uploads/`);
             console.log(`🧪 Test DB: http://localhost:${PORT}/api/test`);
             console.log(`📊 Health: http://localhost:${PORT}/api/health`);
-            console.log('\n✨ VERSIONE STABILE 1.0.0:');
-            console.log('• Sistema funzionante senza cropping complesso');
-            console.log('• Immagini NON vengono stretchate (object-fit: contain)');
-            console.log('• Gestione foto semplice e affidabile');
-            console.log('• Fix per mantenere foto durante editing');
+            console.log('\n✨ VERSIONE 2.0.0 - IPHONE FIX:');
+            console.log('• Fix: Upload da iPhone ora funziona');
+            console.log('• Supporto: Formato HEIC/HEIF automaticamente convertito in JPEG');
+            console.log('• Compressione: Immagini automaticamente compresse e ottimizzate');
+            console.log('• Limiti: Max 5 foto, 10MB ciascuna');
+            console.log('• Performance: Timeout estesi per upload lenti');
         });
     } else {
         // Avvia senza database
