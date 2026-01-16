@@ -86,10 +86,12 @@ const Spot = mongoose.model('Spot', spotSchema);
 // API Routes
 app.get('/api/spots', async (req, res) => {
     try {
+        console.log('📡 Fetching spots from database...');
         const spots = await Spot.find().sort({ createdAt: -1 });
+        console.log(`✅ Found ${spots.length} spots`);
         res.json(spots);
     } catch (error) {
-        console.error('Error fetching spots:', error);
+        console.error('❌ Error fetching spots:', error);
         res.status(500).json({
             error: 'Database error',
             message: 'Impossibile connettersi al database',
@@ -120,6 +122,7 @@ app.get('/api/spots-minimal', async (req, res) => {
 
 app.post('/api/spots', async (req, res) => {
     try {
+        console.log('📝 Creating new spot:', req.body.name);
         // Converti alternativeSpots da array di stringhe a array di ObjectId
         const spotData = { ...req.body };
         if (spotData.alternativeSpots && Array.isArray(spotData.alternativeSpots)) {
@@ -130,9 +133,10 @@ app.post('/api/spots', async (req, res) => {
         
         const spot = new Spot(spotData);
         const savedSpot = await spot.save();
+        console.log(`✅ Spot created with ID: ${savedSpot._id}`);
         res.status(201).json(savedSpot);
     } catch (error) {
-        console.error('Error creating spot:', error);
+        console.error('❌ Error creating spot:', error);
         res.status(400).json({ error: 'Error creating spot', details: error.message });
     }
 });
@@ -161,6 +165,7 @@ app.put('/api/spots/:id', async (req, res) => {
             { new: true, runValidators: true }
         );
         
+        console.log(`✅ Spot updated: ${updatedSpot._id}`);
         res.json(updatedSpot);
     } catch (error) {
         console.error('Error updating spot:', error);
@@ -187,6 +192,7 @@ app.delete('/api/spots/:id', async (req, res) => {
         }
        
         await Spot.findByIdAndDelete(req.params.id);
+        console.log(`✅ Spot deleted: ${req.params.id}`);
         res.json({ message: 'Spot deleted' });
     } catch (error) {
         console.error('Error deleting spot:', error);
@@ -226,6 +232,7 @@ app.post('/api/upload', upload.array('photos', 5), async (req, res) => {
             return res.status(400).json({ error: 'No files uploaded' });
         }
        
+        console.log(`📸 Uploading ${req.files.length} photos...`);
         const photoUrls = [];
        
         for (const file of req.files) {
@@ -280,6 +287,7 @@ app.post('/api/upload', upload.array('photos', 5), async (req, res) => {
             }
         }
        
+        console.log(`✅ Photos uploaded: ${photoUrls.length} files`);
         res.json({
             message: 'Photos uploaded successfully',
             urls: photoUrls,
