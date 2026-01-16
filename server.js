@@ -195,7 +195,7 @@ async function convertHeicToJpeg(filePath) {
     }
 }
 
-// Endpoint per upload foto ottimizzato per iPhone
+// Endpoint per upload foto ottimizzato
 app.post('/api/upload', upload.array('photos', 5), async (req, res) => {
     try {
         if (!req.files || req.files.length === 0) {
@@ -349,31 +349,16 @@ app.get('/api/health', (req, res) => {
         database: state === 1 ? 'connected' : 'disconnected',
         databaseState: ['disconnected', 'connected', 'connecting', 'disconnecting'][state],
         uploads: hasUploadsDir ? 'available' : 'unavailable',
-        uploadsSize: hasUploadsDir ? getFolderSize(uploadsDir) : 0,
         timestamp: new Date().toISOString(),
         environment: process.env.NODE_ENV || 'development'
     });
 });
 
-// Funzione helper per dimensione cartella
-function getFolderSize(folderPath) {
-    let size = 0;
-    if (fs.existsSync(folderPath)) {
-        const files = fs.readdirSync(folderPath);
-        files.forEach(file => {
-            const filePath = path.join(folderPath, file);
-            const stats = fs.statSync(filePath);
-            size += stats.size;
-        });
-    }
-    return (size / (1024 * 1024)).toFixed(2) + ' MB';
-}
-
 // Info API
 app.get('/api', (req, res) => {
     res.json({
         message: 'URBEX HUD API',
-        version: '2.0.0',
+        version: '3.0.0',
         features: ['photo-upload', 'mobile-optimized', 'coordinates-parser', 'iphone-support', 'heic-conversion'],
         limits: {
             maxFileSize: '10MB',
@@ -598,12 +583,12 @@ async function startServer() {
             console.log(`📸 Uploads: http://localhost:${PORT}/uploads/`);
             console.log(`🧪 Test DB: http://localhost:${PORT}/api/test`);
             console.log(`📊 Health: http://localhost:${PORT}/api/health`);
-            console.log('\n✨ VERSIONE 2.0.0 - IPHONE FIX:');
-            console.log('• Fix: Upload da iPhone ora funziona');
-            console.log('• Supporto: Formato HEIC/HEIF automaticamente convertito in JPEG');
-            console.log('• Compressione: Immagini automaticamente compresse e ottimizzate');
-            console.log('• Limiti: Max 5 foto, 10MB ciascuna');
-            console.log('• Performance: Timeout estesi per upload lenti');
+            console.log('\n✨ VERSIONE 3.0.0 - MOBILE FIX COMPLETO:');
+            console.log('• Fix: Layout mobile completamente riscritto');
+            console.log('• Feature: Pagina separata per creare/modificare spot su mobile');
+            console.log('• Fix: Bottoni sempre visibili e accessibili');
+            console.log('• Fix: Upload foto ora funziona su iPhone');
+            console.log('• Performance: Scroll fluido su iOS');
         });
     } else {
         // Avvia senza database
