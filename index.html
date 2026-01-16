@@ -521,6 +521,18 @@
             background: var(--danger);
         }
        
+        /* LOADING SPINNER */
+        .upload-spinner {
+            display: none;
+            margin: 1rem auto;
+            width: 30px;
+            height: 30px;
+            border: 3px solid var(--border);
+            border-radius: 50%;
+            border-top-color: var(--accent);
+            animation: spin 1s linear infinite;
+        }
+       
         /* COORDINATES INPUT */
         .coordinates-help {
             font-size: 0.75rem;
@@ -1263,11 +1275,15 @@
                                 </div>
                                 <div class="photo-upload-text">
                                     <p>Tap to select photos</p>
+                                    <p style="font-size: 0.75rem; margin-top: 0.5rem; color: var(--warning);">
+                                        <i class="fas fa-info-circle"></i> Max 5 photos, 5MB each
+                                    </p>
                                     <button type="button" class="btn" id="browse-photos">
                                         <i class="fas fa-folder-open"></i> Browse Files
                                     </button>
                                 </div>
-                                <input type="file" id="photo-input" accept="image/*" multiple style="display: none;">
+                                <input type="file" id="photo-input" accept="image/jpeg,image/png,image/webp" multiple style="display: none;">
+                                <div class="upload-spinner" id="upload-spinner"></div>
                             </div>
                             <div class="photo-preview-grid" id="photo-preview"></div>
                         </div>
@@ -1377,54 +1393,59 @@
             );
         }
        
-        // Gestione upload foto
+        // Funzione per comprimere immagini (soprattutto per iPhone)
+        async function compressImage(file, maxWidth = 1200, quality = 0.7) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = new Image();
+                    img.onload = function() {
+                        const canvas = document.createElement('canvas');
+                        let width = img.width;
+                        let height = img.height;
+                       
+                        // Ridimensiona se troppo grande
+                        if (width > maxWidth) {
+                            height = (height * maxWidth) / width;
+                            width = maxWidth;
+                        }
+                       
+                        canvas.width = width;
+                        canvas.height = height;
+                       
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+                       
+                        // Converti in JPEG (supportato universalmente)
+                        canvas.toBlob(function(blob) {
+                            const compressedFile = new File([blob], file.name.replace(/\.[^/.]+$/, ".jpg"), {
+                                type: 'image/jpeg',
+                                lastModified: Date.now()
+                            });
+                            resolve(compressedFile);
+                        }, 'image/jpeg', quality);
+                    };
+                    img.onerror = reject;
+                    img.src = e.target.result;
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+       
+        // Gestione upload foto con compressione
         function setupPhotoUpload() {
             const dropArea = document.getElementById('photo-drop-area');
             const fileInput = document.getElementById('photo-input');
             const previewContainer = document.getElementById('photo-preview');
             const browseBtn = document.getElementById('browse-photos');
+            const uploadSpinner = document.getElementById('upload-spinner');
            
             browseBtn.addEventListener('click', () => fileInput.click());
            
-            fileInput.addEventListener('change', handleFiles);
-           
-            // Drag and drop (solo desktop)
-            if (!isMobile) {
-                ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-                    dropArea.addEventListener(eventName, preventDefaults, false);
-                });
-               
-                function preventDefaults(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                }
-               
-                ['dragenter', 'dragover'].forEach(eventName => {
-                    dropArea.addEventListener(eventName, highlight, false);
-                });
-               
-                ['dragleave', 'drop'].forEach(eventName => {
-                    dropArea.addEventListener(eventName, unhighlight, false);
-                });
-               
-                function highlight() {
-                    dropArea.style.borderColor = 'var(--accent)';
-                    dropArea.style.backgroundColor = 'rgba(0, 255, 136, 0.05)';
-                }
-               
-                function unhighlight() {
-                    dropArea.style.borderColor = 'var(--border)';
-                    dropArea.style.backgroundColor = 'transparent';
-                }
-               
-                dropArea.addEventListener('drop', handleDrop, false);
-               
-                function handleDrop(e) {
-                    const dt = e.dataTransfer;
-                    const files = dt.files;
-                    handleFiles({ target: { files } });
-                }
-            }
+            fileInput.addEventListener('change', async (e) => {
+                await handleFiles(e);
+            });
            
             // Per mobile, solo tap
             dropArea.addEventListener('click', () => {
@@ -1433,30 +1454,91 @@
                 }
             });
            
-            function handleFiles(e) {
+            async function handleFiles(e) {
                 const files = Array.from(e.target.files);
                
-                files.forEach(file => {
+                // Limita a 5 foto
+                if (files.length > 5) {
+                    showMessage('Maximum 5 photos allowed', 'error');
+                    return;
+                }
+               
+                // Controlla dimensione totale
+                const totalSize = files.reduce((total, file) => total + file.size, 0);
+                if (totalSize > 25 * 1024 * 1024) { // 25MB total
+                    showMessage('Total size should be less than 25MB', 'error');
+                    return;
+                }
+               
+                // Mostra spinner
+                uploadSpinner.style.display = 'block';
+               
+                for (const file of files) {
                     if (!file.type.match('image.*')) {
                         showMessage('Only image files are allowed', 'error');
-                        return;
+                        continue;
                     }
                    
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        const photoData = {
-                            id: Date.now() + Math.random(),
-                            dataUrl: e.target.result,
-                            file: file
+                    // Controlla dimensione singolo file
+                    if (file.size > 5 * 1024 * 1024) { // 5MB
+                        showMessage(`Compressing ${file.name}...`, 'success');
+                        try {
+                            // Comprimi immagini grandi
+                            const compressedFile = await compressImage(file, 1200, 0.7);
+                           
+                            const reader = new FileReader();
+                            reader.onload = function(e) {
+                                const photoData = {
+                                    id: Date.now() + Math.random(),
+                                    dataUrl: e.target.result,
+                                    file: compressedFile,
+                                    originalName: file.name
+                                };
+                               
+                                uploadedPhotos.push(photoData);
+                                updatePhotoPreview();
+                            };
+                            reader.readAsDataURL(compressedFile);
+                        } catch (error) {
+                            console.error('Error compressing image:', error);
+                            // Fallback all'originale
+                            const reader = new FileReader();
+                            reader.onload = function(e) {
+                                const photoData = {
+                                    id: Date.now() + Math.random(),
+                                    dataUrl: e.target.result,
+                                    file: file
+                                };
+                               
+                                uploadedPhotos.push(photoData);
+                                updatePhotoPreview();
+                            };
+                            reader.readAsDataURL(file);
+                        }
+                    } else {
+                        // File piccolo, usa così com'è
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            const photoData = {
+                                id: Date.now() + Math.random(),
+                                dataUrl: e.target.result,
+                                file: file
+                            };
+                           
+                            uploadedPhotos.push(photoData);
+                            updatePhotoPreview();
                         };
-                       
-                        uploadedPhotos.push(photoData);
-                        updatePhotoPreview();
-                    };
-                    reader.readAsDataURL(file);
-                });
+                        reader.readAsDataURL(file);
+                    }
+                }
                
+                // Nascondi spinner
+                uploadSpinner.style.display = 'none';
                 fileInput.value = '';
+               
+                if (files.length > 0) {
+                    showMessage(`${files.length} photo(s) added`, 'success');
+                }
             }
            
             function updatePhotoPreview() {
@@ -1486,11 +1568,13 @@
             document.getElementById('close-modal').addEventListener('click', () => {
                 uploadedPhotos = [];
                 updatePhotoPreview();
+                uploadSpinner.style.display = 'none';
             });
            
             document.getElementById('cancel-btn').addEventListener('click', () => {
                 uploadedPhotos = [];
                 updatePhotoPreview();
+                uploadSpinner.style.display = 'none';
             });
         }
        
@@ -1526,24 +1610,39 @@
            
             try {
                 const formData = new FormData();
+                
+                // Aggiungi solo i file che non sono già stati uploadati
                 uploadedPhotos.forEach(photo => {
-                    if (photo.file) {
+                    if (photo.file && !photo.dataUrl.startsWith('http')) {
                         formData.append('photos', photo.file);
                     }
                 });
                
+                // Se non ci sono nuovi file da uploadare, ritorna gli URL esistenti
+                if (formData.getAll('photos').length === 0) {
+                    return uploadedPhotos.map(photo => photo.dataUrl);
+                }
+               
                 const response = await fetch(`${API_URL}/upload`, {
                     method: 'POST',
-                    body: formData
+                    body: formData,
+                    // Timeout più lungo per iPhone
+                    signal: AbortSignal.timeout(60000) // 60 secondi
                 });
                
-                if (!response.ok) throw new Error('Photo upload failed');
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`Photo upload failed: ${errorText}`);
+                }
+               
                 const data = await response.json();
                 return data.urls || [];
             } catch (error) {
                 console.error('Error uploading photos:', error);
-                // Fallback: usa data URLs
-                return uploadedPhotos.map(photo => photo.dataUrl);
+                if (error.name === 'TimeoutError') {
+                    throw new Error('Upload timeout. Please try with smaller images.');
+                }
+                throw error;
             }
         }
        
@@ -1591,17 +1690,25 @@
                 const response = await fetch(url, {
                     method: method,
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(spotData)
+                    body: JSON.stringify(spotData),
+                    signal: AbortSignal.timeout(30000) // 30 secondi timeout
                 });
                
-                if (!response.ok) throw new Error('Save failed');
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`Save failed: ${errorText}`);
+                }
                
                 showMessage('Spot saved successfully!', 'success');
                 await fetchSpots();
                 return await response.json();
             } catch (error) {
                 console.error('Error saving spot:', error);
-                showMessage('Error saving spot', 'error');
+                if (error.name === 'TimeoutError') {
+                    showMessage('Save timeout. Please check your connection.', 'error');
+                } else {
+                    showMessage(`Error saving spot: ${error.message}`, 'error');
+                }
                 throw error;
             }
         }
@@ -2066,6 +2173,7 @@
                 document.getElementById('mission-modal').style.display = 'none';
                 uploadedPhotos = [];
                 document.getElementById('photo-preview').innerHTML = '';
+                document.getElementById('upload-spinner').style.display = 'none';
             });
            
             document.getElementById('close-detail').addEventListener('click', closeDetailModal);
@@ -2078,6 +2186,7 @@
                 document.getElementById('mission-modal').style.display = 'none';
                 uploadedPhotos = [];
                 document.getElementById('photo-preview').innerHTML = '';
+                document.getElementById('upload-spinner').style.display = 'none';
             });
            
             // Chiudi modali cliccando all'esterno
@@ -2086,6 +2195,7 @@
                     document.getElementById('mission-modal').style.display = 'none';
                     uploadedPhotos = [];
                     document.getElementById('photo-preview').innerHTML = '';
+                    document.getElementById('upload-spinner').style.display = 'none';
                 }
             });
            
