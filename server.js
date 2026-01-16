@@ -63,15 +63,17 @@ const spotSchema = new mongoose.Schema({
     location: { type: String, required: true },
     status: {
         type: String,
-        enum: ['planned', 'active', 'completed'],
+        enum: ['planned', 'completed'],
         default: 'planned'
     },
-    date: { type: Date },
     lat: { type: Number, required: true },
     lng: { type: Number, required: true },
     description: { type: String, required: true },
     planA: { type: String },
-    planB: { type: String },
+    alternativeSpots: [{ 
+        type: mongoose.Schema.Types.ObjectId, 
+        ref: 'Spot' 
+    }],
     photos: [{ type: String }],
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now }
@@ -87,7 +89,9 @@ const Spot = mongoose.model('Spot', spotSchema);
 // API Routes
 app.get('/api/spots', async (req, res) => {
     try {
-        const spots = await Spot.find().sort({ createdAt: -1 });
+        const spots = await Spot.find()
+            .sort({ createdAt: -1 })
+            .populate('alternativeSpots', 'name location');
         res.json(spots);
     } catch (error) {
         console.error('Error fetching spots:', error);
@@ -101,7 +105,8 @@ app.get('/api/spots', async (req, res) => {
 
 app.get('/api/spots/:id', async (req, res) => {
     try {
-        const spot = await Spot.findById(req.params.id);
+        const spot = await Spot.findById(req.params.id)
+            .populate('alternativeSpots', 'name location lat lng');
         if (!spot) return res.status(404).json({ error: 'Spot not found' });
         res.json(spot);
     } catch (error) {
@@ -358,8 +363,8 @@ app.get('/api/health', (req, res) => {
 app.get('/api', (req, res) => {
     res.json({
         message: 'URBEX HUD API',
-        version: '3.0.0',
-        features: ['photo-upload', 'mobile-optimized', 'coordinates-parser', 'iphone-support', 'heic-conversion'],
+        version: '3.1.0',
+        features: ['photo-upload', 'mobile-optimized', 'coordinates-parser', 'iphone-support', 'heic-conversion', 'alternative-spots'],
         limits: {
             maxFileSize: '10MB',
             maxFiles: 5,
@@ -508,12 +513,10 @@ async function seedDatabase() {
                     name: "EX MANIFATTURA TABACCHI",
                     location: "Milano, Italy",
                     status: "planned",
-                    date: new Date("2024-06-15"),
                     lat: 45.4843,
                     lng: 9.1842,
                     description: "Ex tobacco factory from the 80s with original machinery.",
                     planA: "Side gate access on Via delle Industrie",
-                    planB: "Gap in rear fence",
                     photos: [
                         "https://images.unsplash.com/photo-1581094794329-c8112a89af12?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
                     ]
@@ -521,13 +524,11 @@ async function seedDatabase() {
                 {
                     name: "ABANDONED HOSPITAL",
                     location: "Roma, Italy",
-                    status: "active",
-                    date: new Date("2024-06-20"),
+                    status: "completed",
                     lat: 41.9028,
                     lng: 12.4964,
                     description: "Old psychiatric hospital abandoned since 1999.",
                     planA: "Main entrance from the east side",
-                    planB: "Broken window on ground floor",
                     photos: [
                         "https://images.unsplash.com/photo-1551601651-2a8555f1a136?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
                     ]
@@ -583,12 +584,12 @@ async function startServer() {
             console.log(`📸 Uploads: http://localhost:${PORT}/uploads/`);
             console.log(`🧪 Test DB: http://localhost:${PORT}/api/test`);
             console.log(`📊 Health: http://localhost:${PORT}/api/health`);
-            console.log('\n✨ VERSIONE 3.0.0 - MOBILE FIX COMPLETO:');
-            console.log('• Fix: Layout mobile completamente riscritto');
-            console.log('• Feature: Pagina separata per creare/modificare spot su mobile');
-            console.log('• Fix: Bottoni sempre visibili e accessibili');
-            console.log('• Fix: Upload foto ora funziona su iPhone');
-            console.log('• Performance: Scroll fluido su iOS');
+            console.log('\n✨ VERSIONE 3.1.0 - MODIFICHE COMPLETATE:');
+            console.log('• Fix: Bottone View ora funziona correttamente');
+            console.log('• Feature: Mappa usa Google Satellite');
+            console.log('• Removed: Planned date e status "exploring" rimossi');
+            console.log('• Feature: Alternative spots (max 3) invece di alternative access');
+            console.log('• Performance: Popolamento automatico degli spots alternativi');
         });
     } else {
         // Avvia senza database
