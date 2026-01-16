@@ -35,6 +35,7 @@
             line-height: 1.6;
             -webkit-font-smoothing: antialiased;
             -webkit-text-size-adjust: 100%;
+            overflow-x: hidden;
         }
        
         /* LAYOUT DESKTOP */
@@ -184,10 +185,138 @@
         /* LAYOUT MOBILE */
         .mobile-header {
             display: none;
+            padding: 1rem;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            align-items: center;
+            justify-content: space-between;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            z-index: 100;
         }
        
+        .mobile-header .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0;
+            border: none;
+        }
+       
+        .mobile-header .logo h1 {
+            font-size: 1.2rem;
+        }
+       
+        .mobile-header .logo p {
+            display: none;
+        }
+       
+        /* Bottom Navigation */
         .bottom-nav {
             display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border);
+            padding: 0.5rem 1rem;
+            z-index: 100;
+            height: 60px;
+        }
+       
+        .bottom-nav-items {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+        }
+       
+        .bottom-nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 0.5rem;
+            color: var(--text-dim);
+            text-decoration: none;
+            font-size: 0.75rem;
+            flex: 1;
+            border-radius: 8px;
+            transition: all 0.2s;
+            min-width: 60px;
+        }
+       
+        .bottom-nav-item i {
+            font-size: 1.25rem;
+            margin-bottom: 0.25rem;
+        }
+       
+        .bottom-nav-item.active {
+            color: var(--accent);
+            background: rgba(0, 255, 136, 0.1);
+        }
+       
+        .bottom-nav-item span {
+            font-size: 0.7rem;
+            font-weight: 500;
+        }
+       
+        /* PAGINA MOBILE PER CREARE/MODIFICARE SPOT */
+        .mobile-form-page {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--bg-primary);
+            z-index: 1000;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+       
+        .mobile-form-header {
+            padding: 1rem;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+       
+        .mobile-form-header h2 {
+            font-size: 1.2rem;
+            font-weight: 700;
+        }
+       
+        .mobile-form-content {
+            padding: 1rem;
+            padding-bottom: 5rem; /* Spazio per i bottoni fissi */
+        }
+       
+        .mobile-form-footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border);
+            padding: 1rem;
+            display: flex;
+            gap: 1rem;
+            z-index: 10;
+        }
+       
+        .mobile-form-footer .btn {
+            flex: 1;
+            justify-content: center;
+            padding: 1rem;
         }
        
         /* CARDS */
@@ -338,7 +467,7 @@
             height: 100%;
         }
        
-        /* MODAL */
+        /* MODAL PER DESKTOP */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -453,7 +582,7 @@
             border-color: var(--accent);
         }
        
-        /* PHOTO UPLOAD */
+        /* PHOTO UPLOAD SEMPLICE */
         .photo-upload-container {
             border: 2px dashed var(--border);
             border-radius: 8px;
@@ -815,7 +944,7 @@
             background: #3a3a3a;
         }
        
-        /* MOBILE RESPONSIVE - LAYOUT RISTRUTTURATO */
+        /* MOBILE RESPONSIVE */
         @media (max-width: 1024px) {
             /* Nascondi layout desktop su mobile */
             .sidebar {
@@ -834,80 +963,20 @@
             /* Mostra layout mobile */
             .mobile-header {
                 display: flex;
-                padding: 1rem;
-                background: var(--bg-secondary);
-                border-bottom: 1px solid var(--border);
-                align-items: center;
-                justify-content: space-between;
-                position: sticky;
-                top: 0;
-                z-index: 100;
             }
            
-            .mobile-header .logo {
-                display: flex;
-                align-items: center;
-                gap: 0.75rem;
-                padding: 0;
-                border: none;
-            }
-           
-            .mobile-header .logo h1 {
-                font-size: 1.2rem;
-            }
-           
-            .mobile-header .logo p {
-                display: none;
-            }
-           
-            /* Bottom Navigation */
             .bottom-nav {
-                display: flex;
-                position: fixed;
-                bottom: 0;
-                left: 0;
-                right: 0;
-                background: var(--bg-secondary);
-                border-top: 1px solid var(--border);
-                padding: 0.5rem 1rem;
-                z-index: 100;
-                justify-content: space-around;
+                display: block;
             }
            
-            .bottom-nav-item {
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                padding: 0.5rem 1rem;
-                color: var(--text-dim);
-                text-decoration: none;
-                font-size: 0.75rem;
-                flex: 1;
-                border-radius: 8px;
-                transition: all 0.2s;
-            }
-           
-            .bottom-nav-item i {
-                font-size: 1.25rem;
-                margin-bottom: 0.25rem;
-            }
-           
-            .bottom-nav-item.active {
-                color: var(--accent);
-                background: rgba(0, 255, 136, 0.1);
-            }
-           
-            .bottom-nav-item span {
-                font-size: 0.7rem;
-                font-weight: 500;
-            }
-           
-            /* Aggiungi spazio per bottom nav */
+            /* Content area per mobile */
             .content {
                 padding: 1rem;
-                padding-bottom: 5rem; /* Spazio per la bottom nav */
-                height: calc(100vh - 60px); /* Altezza totale meno header */
+                padding-top: 70px; /* Spazio per header mobile */
+                padding-bottom: 70px; /* Spazio per bottom nav */
+                min-height: 100vh;
                 overflow-y: auto;
+                -webkit-overflow-scrolling: touch;
             }
            
             /* Stats nella pagina principale su mobile */
@@ -954,35 +1023,22 @@
            
             /* Mappa su mobile */
             .map-container {
-                height: calc(100vh - 120px);
+                height: calc(100vh - 140px);
                 border-radius: 0;
                 border: none;
+                margin: -1rem;
+                width: calc(100% + 2rem);
             }
            
-            /* Form ottimizzato per mobile */
+            /* Form su mobile */
             .form-grid {
                 grid-template-columns: 1fr;
                 gap: 1rem;
             }
            
-            .modal {
-                max-width: 100%;
-                border-radius: 0;
-                max-height: 100vh;
-                height: 100vh;
-            }
-           
-            .modal-body {
-                padding: 1.5rem;
-                max-height: calc(100vh - 140px);
-            }
-           
-            .modal-header {
-                padding: 1.25rem;
-            }
-           
-            .modal-footer {
-                padding: 1.25rem;
+            /* Modal desktop nascosto su mobile */
+            .modal-overlay {
+                display: none !important;
             }
            
             /* Gallery su mobile */
@@ -1010,13 +1066,30 @@
             }
            
             .btn {
-                padding: 0.75rem 1rem;
-                font-size: 0.85rem;
+                padding: 1rem;
+                font-size: 1rem;
             }
            
             /* Previeni zoom su iOS per input */
             input, textarea, select {
                 font-size: 16px;
+            }
+           
+            /* Input più grandi su mobile */
+            .form-group input,
+            .form-group select,
+            .form-group textarea {
+                padding: 1rem;
+                font-size: 1rem;
+            }
+           
+            /* Photo upload più grande su mobile */
+            .photo-upload-container {
+                padding: 2rem 1rem;
+            }
+           
+            .photo-preview-grid {
+                grid-template-columns: repeat(3, 1fr);
             }
         }
        
@@ -1041,12 +1114,16 @@
                 font-size: 1.2rem;
             }
            
-            .bottom-nav-item {
-                padding: 0.5rem;
+            .photo-preview-grid {
+                grid-template-columns: repeat(2, 1fr);
             }
            
-            .bottom-nav-item span {
-                font-size: 0.65rem;
+            .mobile-form-content {
+                padding-bottom: 6rem;
+            }
+           
+            .mobile-form-footer {
+                flex-direction: column;
             }
         }
        
@@ -1071,10 +1148,28 @@
             touch-action: manipulation;
         }
        
-        /* FIX per evitare scroll orizzontale */
-        html, body {
-            overflow-x: hidden;
-            width: 100%;
+        /* Safe area per iPhone X e superiori */
+        @supports (padding: max(0px)) {
+            .mobile-header {
+                padding-top: max(1rem, env(safe-area-inset-top));
+                padding-left: max(1rem, env(safe-area-inset-left));
+                padding-right: max(1rem, env(safe-area-inset-right));
+            }
+           
+            .bottom-nav {
+                padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+                padding-left: max(1rem, env(safe-area-inset-left));
+                padding-right: max(1rem, env(safe-area-inset-right));
+            }
+           
+            .mobile-form-footer {
+                padding-bottom: max(1rem, env(safe-area-inset-bottom));
+            }
+           
+            .content {
+                padding-left: max(1rem, env(safe-area-inset-left));
+                padding-right: max(1rem, env(safe-area-inset-right));
+            }
         }
     </style>
 </head>
@@ -1172,26 +1267,108 @@
         <div class="logo">
             <h1>URBEX Tracker</h1>
         </div>
-        <button class="btn" id="mobile-add-btn"><i class="fas fa-plus"></i></button>
+        <button class="btn" id="mobile-add-btn"><i class="fas fa-plus"></i> Add</button>
     </div>
 
     <!-- BOTTOM NAVIGATION MOBILE -->
     <nav class="bottom-nav">
-        <a href="#" class="bottom-nav-item active" data-view="missions">
-            <i class="fas fa-map-marker-alt"></i>
-            <span>Spots</span>
-        </a>
-        <a href="#" class="bottom-nav-item" data-view="map">
-            <i class="fas fa-map"></i>
-            <span>Map</span>
-        </a>
-        <a href="#" class="bottom-nav-item" data-view="archive">
-            <i class="fas fa-archive"></i>
-            <span>Archive</span>
-        </a>
+        <div class="bottom-nav-items">
+            <a href="#" class="bottom-nav-item active" data-view="missions">
+                <i class="fas fa-map-marker-alt"></i>
+                <span>Spots</span>
+            </a>
+            <a href="#" class="bottom-nav-item" data-view="map">
+                <i class="fas fa-map"></i>
+                <span>Map</span>
+            </a>
+            <a href="#" class="bottom-nav-item" data-view="archive">
+                <i class="fas fa-archive"></i>
+                <span>Archive</span>
+            </a>
+        </div>
     </nav>
 
-    <!-- MODALS -->
+    <!-- PAGINA MOBILE PER CREARE/MODIFICARE SPOT -->
+    <div class="mobile-form-page" id="mobile-form-page">
+        <div class="mobile-form-header">
+            <h2 id="mobile-form-title">Add New Spot</h2>
+            <button class="close-btn" id="close-mobile-form">×</button>
+        </div>
+        <div class="mobile-form-content">
+            <form id="mobile-mission-form">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="mobile-mission-name"><i class="fas fa-tag"></i> Spot Name</label>
+                        <input type="text" id="mobile-mission-name" required placeholder="Ex. Abandoned Factory">
+                    </div>
+                    <div class="form-group">
+                        <label for="mobile-mission-location"><i class="fas fa-map-marker-alt"></i> Location</label>
+                        <input type="text" id="mobile-mission-location" required placeholder="City, Country">
+                    </div>
+                    <div class="form-group">
+                        <label for="mobile-mission-status"><i class="fas fa-flag"></i> Status</label>
+                        <select id="mobile-mission-status">
+                            <option value="planned">To Explore</option>
+                            <option value="active">Exploring</option>
+                            <option value="completed">Explored</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="mobile-mission-date"><i class="fas fa-calendar"></i> Planned Date</label>
+                        <input type="date" id="mobile-mission-date">
+                    </div>
+                    <div class="form-group full">
+                        <label for="mobile-mission-coords"><i class="fas fa-map-pin"></i> Coordinates</label>
+                        <input type="text" id="mobile-mission-coords"
+                               placeholder="45.4642,9.1900 or Google Maps link"
+                               required>
+                        <div class="coordinates-help">
+                            Format: "latitude,longitude" or Google Maps link
+                            <button type="button" class="btn-get-location" id="mobile-get-current-location">
+                                <i class="fas fa-location-crosshairs"></i> Use My Location
+                            </button>
+                        </div>
+                    </div>
+                    <div class="form-group full">
+                        <label for="mobile-mission-desc"><i class="fas fa-align-left"></i> Description</label>
+                        <textarea id="mobile-mission-desc" rows="4" required placeholder="Tell the story of this place..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="mobile-mission-plan-a"><i class="fas fa-door-open"></i> Main Access</label>
+                        <textarea id="mobile-mission-plan-a" rows="3" placeholder="How to get in..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="mobile-mission-plan-b"><i class="fas fa-door-closed"></i> Alternative Access</label>
+                        <textarea id="mobile-mission-plan-b" rows="3" placeholder="Backup plan..."></textarea>
+                    </div>
+                    <div class="form-group full">
+                        <label><i class="fas fa-camera"></i> Photos</label>
+                        <div class="photo-upload-container" id="mobile-photo-drop-area">
+                            <div class="photo-upload-icon">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                            </div>
+                            <div class="photo-upload-text">
+                                <p>Tap to select photos</p>
+                                <p style="font-size: 0.8rem; margin-top: 0.5rem; color: var(--text-dim);">
+                                    Max 5 photos, 10MB each
+                                </p>
+                            </div>
+                            <input type="file" id="mobile-photo-input" accept="image/*" multiple style="display: none;">
+                        </div>
+                        <div class="photo-preview-grid" id="mobile-photo-preview"></div>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="mobile-form-footer">
+            <button type="button" class="btn btn-secondary" id="mobile-cancel-btn">Cancel</button>
+            <button type="submit" form="mobile-mission-form" class="btn" id="mobile-save-btn">
+                <i class="fas fa-save"></i> Save
+            </button>
+        </div>
+    </div>
+
+    <!-- MODAL PER DESKTOP -->
     <div class="modal-overlay" id="detail-modal">
         <div class="modal">
             <div class="modal-header">
@@ -1262,7 +1439,7 @@
                                     <i class="fas fa-cloud-upload-alt"></i>
                                 </div>
                                 <div class="photo-upload-text">
-                                    <p>Tap to select photos</p>
+                                    <p>Click or drag to select photos</p>
                                     <button type="button" class="btn" id="browse-photos">
                                         <i class="fas fa-folder-open"></i> Browse Files
                                     </button>
@@ -1366,7 +1543,11 @@
                 (position) => {
                     const lat = position.coords.latitude;
                     const lng = position.coords.longitude;
-                    document.getElementById('mission-coords').value = `${lat.toFixed(6)},${lng.toFixed(6)}`;
+                    if (isMobile) {
+                        document.getElementById('mobile-mission-coords').value = `${lat.toFixed(6)},${lng.toFixed(6)}`;
+                    } else {
+                        document.getElementById('mission-coords').value = `${lat.toFixed(6)},${lng.toFixed(6)}`;
+                    }
                     showMessage('Location obtained!', 'success');
                 },
                 (error) => {
@@ -1377,64 +1558,53 @@
             );
         }
        
-        // Gestione upload foto
+        // Gestione upload foto semplice
         function setupPhotoUpload() {
+            // Setup per desktop
             const dropArea = document.getElementById('photo-drop-area');
             const fileInput = document.getElementById('photo-input');
             const previewContainer = document.getElementById('photo-preview');
             const browseBtn = document.getElementById('browse-photos');
            
-            browseBtn.addEventListener('click', () => fileInput.click());
-           
-            fileInput.addEventListener('change', handleFiles);
-           
-            // Drag and drop (solo desktop)
-            if (!isMobile) {
-                ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-                    dropArea.addEventListener(eventName, preventDefaults, false);
-                });
-               
-                function preventDefaults(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                }
-               
-                ['dragenter', 'dragover'].forEach(eventName => {
-                    dropArea.addEventListener(eventName, highlight, false);
-                });
-               
-                ['dragleave', 'drop'].forEach(eventName => {
-                    dropArea.addEventListener(eventName, unhighlight, false);
-                });
-               
-                function highlight() {
-                    dropArea.style.borderColor = 'var(--accent)';
-                    dropArea.style.backgroundColor = 'rgba(0, 255, 136, 0.05)';
-                }
-               
-                function unhighlight() {
-                    dropArea.style.borderColor = 'var(--border)';
-                    dropArea.style.backgroundColor = 'transparent';
-                }
-               
-                dropArea.addEventListener('drop', handleDrop, false);
-               
-                function handleDrop(e) {
-                    const dt = e.dataTransfer;
-                    const files = dt.files;
-                    handleFiles({ target: { files } });
-                }
+            if (browseBtn) {
+                browseBtn.addEventListener('click', () => fileInput.click());
             }
            
-            // Per mobile, solo tap
-            dropArea.addEventListener('click', () => {
-                if (isMobile) {
-                    fileInput.click();
-                }
-            });
+            if (fileInput) {
+                fileInput.addEventListener('change', handleFiles);
+            }
+           
+            // Setup per mobile
+            const mobileDropArea = document.getElementById('mobile-photo-drop-area');
+            const mobileFileInput = document.getElementById('mobile-photo-input');
+            const mobilePreviewContainer = document.getElementById('mobile-photo-preview');
+           
+            if (mobileDropArea) {
+                mobileDropArea.addEventListener('click', () => mobileFileInput.click());
+            }
+           
+            if (mobileFileInput) {
+                mobileFileInput.addEventListener('change', handleMobileFiles);
+            }
            
             function handleFiles(e) {
                 const files = Array.from(e.target.files);
+                processFiles(files, previewContainer);
+                fileInput.value = '';
+            }
+           
+            function handleMobileFiles(e) {
+                const files = Array.from(e.target.files);
+                processFiles(files, mobilePreviewContainer);
+                mobileFileInput.value = '';
+            }
+           
+            function processFiles(files, previewContainer) {
+                // Limita a 5 foto
+                if (files.length > 5) {
+                    showMessage('Maximum 5 photos allowed', 'error');
+                    return;
+                }
                
                 files.forEach(file => {
                     if (!file.type.match('image.*')) {
@@ -1451,15 +1621,13 @@
                         };
                        
                         uploadedPhotos.push(photoData);
-                        updatePhotoPreview();
+                        updatePhotoPreview(previewContainer);
                     };
                     reader.readAsDataURL(file);
                 });
-               
-                fileInput.value = '';
             }
            
-            function updatePhotoPreview() {
+            function updatePhotoPreview(previewContainer) {
                 previewContainer.innerHTML = '';
                
                 uploadedPhotos.forEach((photo, index) => {
@@ -1473,24 +1641,34 @@
                 });
                
                 // Aggiungi event listener per rimuovere foto
-                document.querySelectorAll('.remove-photo').forEach(btn => {
+                previewContainer.querySelectorAll('.remove-photo').forEach(btn => {
                     btn.addEventListener('click', function() {
                         const index = parseInt(this.getAttribute('data-index'));
                         uploadedPhotos.splice(index, 1);
-                        updatePhotoPreview();
+                        updatePhotoPreview(previewContainer);
                     });
                 });
             }
            
-            // Pulisci le foto quando si chiude il modal
-            document.getElementById('close-modal').addEventListener('click', () => {
+            // Pulisci le foto quando si chiude
+            document.getElementById('close-modal')?.addEventListener('click', () => {
                 uploadedPhotos = [];
-                updatePhotoPreview();
+                updatePhotoPreview(previewContainer);
             });
            
-            document.getElementById('cancel-btn').addEventListener('click', () => {
+            document.getElementById('cancel-btn')?.addEventListener('click', () => {
                 uploadedPhotos = [];
-                updatePhotoPreview();
+                updatePhotoPreview(previewContainer);
+            });
+           
+            document.getElementById('close-mobile-form')?.addEventListener('click', () => {
+                uploadedPhotos = [];
+                updatePhotoPreview(mobilePreviewContainer);
+            });
+           
+            document.getElementById('mobile-cancel-btn')?.addEventListener('click', () => {
+                uploadedPhotos = [];
+                updatePhotoPreview(mobilePreviewContainer);
             });
         }
        
@@ -1549,37 +1727,10 @@
        
         async function saveSpot(spotData) {
             try {
-                // PER NUOVO SPOT: Upload foto
-                if (uploadedPhotos.length > 0 && !editingMissionId) {
+                // Upload foto
+                if (uploadedPhotos.length > 0) {
                     const photoUrls = await uploadPhotos();
                     spotData.photos = photoUrls;
-                }
-                // PER EDITING: Mantieni le foto esistenti e aggiungi le nuove
-                else if (uploadedPhotos.length > 0 && editingMissionId) {
-                    // Separa foto esistenti (URL web) e nuove (data URLs o file objects)
-                    const existingPhotos = [];
-                    const newPhotos = [];
-                    
-                    uploadedPhotos.forEach(photo => {
-                        if (photo.dataUrl.startsWith('http')) {
-                            // Foto già uploadate
-                            existingPhotos.push(photo.dataUrl);
-                        } else {
-                            // Nuove foto da uploadare
-                            newPhotos.push(photo);
-                        }
-                    });
-                    
-                    // Upload nuove foto se ce ne sono
-                    let newPhotoUrls = [];
-                    if (newPhotos.length > 0) {
-                        // Sostituisci le nuove foto con i loro oggetti file
-                        uploadedPhotos = [...existingPhotos.map(url => ({ dataUrl: url, file: null })), ...newPhotos];
-                        newPhotoUrls = await uploadPhotos();
-                    }
-                    
-                    // Combina foto esistenti e nuove
-                    spotData.photos = [...existingPhotos, ...newPhotoUrls];
                 }
                
                 const url = editingMissionId
@@ -1601,7 +1752,7 @@
                 return await response.json();
             } catch (error) {
                 console.error('Error saving spot:', error);
-                showMessage('Error saving spot', 'error');
+                showMessage('Error saving spot: ' + error.message, 'error');
                 throw error;
             }
         }
@@ -1662,26 +1813,6 @@
                 attribution: '© OpenStreetMap',
                 maxZoom: 19
             }).addTo(map);
-           
-            // Aggiungi controllo per geolocalizzazione su mobile
-            if (isMobile) {
-                L.control.locate({
-                    position: 'topright',
-                    drawCircle: true,
-                    follow: false,
-                    setView: true,
-                    keepCurrentZoomLevel: false,
-                    icon: 'fas fa-map-marker-alt',
-                    strings: {
-                        title: "Show my location"
-                    },
-                    locateOptions: {
-                        maxZoom: 16,
-                        watch: false,
-                        enableHighAccuracy: true
-                    }
-                }).addTo(map);
-            }
            
             updateMap();
         }
@@ -1774,7 +1905,7 @@
                         <div class="empty-state-icon">📍</div>
                         <h2>No Spots Yet</h2>
                         <p>Add your first urbex spot to get started</p>
-                        <button class="btn" onclick="showAddMissionModal()">Add First Spot</button>
+                        <button class="btn" onclick="${isMobile ? 'showMobileAddForm()' : 'showAddMissionModal()'}">Add First Spot</button>
                     </div>
                 `;
                 return;
@@ -1955,35 +2086,55 @@
            
             editingMissionId = id;
             uploadedPhotos = [];
-            document.getElementById('modal-title').textContent = 'Edit Spot';
            
-            document.getElementById('mission-name').value = mission.name;
-            document.getElementById('mission-location').value = mission.location;
-            document.getElementById('mission-status').value = mission.status;
-            document.getElementById('mission-date').value = mission.date ? mission.date.split('T')[0] : '';
-            document.getElementById('mission-coords').value = mission.lat && mission.lng ? `${mission.lat},${mission.lng}` : '';
-            document.getElementById('mission-desc').value = mission.description;
-            document.getElementById('mission-plan-a').value = mission.planA || '';
-            document.getElementById('mission-plan-b').value = mission.planB || '';
-           
-            // Carica foto esistenti per l'editing
-            if (mission.photos && mission.photos.length > 0) {
-                uploadedPhotos = mission.photos.map((url, index) => ({
-                    id: index,
-                    dataUrl: url,
-                    file: null
-                }));
-                updatePhotoPreview();
-            }
-           
-            closeDetailModal();
-            document.getElementById('mission-modal').style.display = 'flex';
-           
-            // Focus su mobile
             if (isMobile) {
-                setTimeout(() => {
-                    document.getElementById('mission-name').focus();
-                }, 300);
+                // Usa il form mobile
+                document.getElementById('mobile-form-title').textContent = 'Edit Spot';
+                document.getElementById('mobile-mission-name').value = mission.name;
+                document.getElementById('mobile-mission-location').value = mission.location;
+                document.getElementById('mobile-mission-status').value = mission.status;
+                document.getElementById('mobile-mission-date').value = mission.date ? mission.date.split('T')[0] : '';
+                document.getElementById('mobile-mission-coords').value = mission.lat && mission.lng ? `${mission.lat},${mission.lng}` : '';
+                document.getElementById('mobile-mission-desc').value = mission.description;
+                document.getElementById('mobile-mission-plan-a').value = mission.planA || '';
+                document.getElementById('mobile-mission-plan-b').value = mission.planB || '';
+               
+                // Carica foto esistenti
+                if (mission.photos && mission.photos.length > 0) {
+                    uploadedPhotos = mission.photos.map((url, index) => ({
+                        id: index,
+                        dataUrl: url,
+                        file: null
+                    }));
+                    updatePhotoPreview(document.getElementById('mobile-photo-preview'));
+                }
+               
+                closeDetailModal();
+                showMobileForm();
+            } else {
+                // Usa il modal desktop
+                document.getElementById('modal-title').textContent = 'Edit Spot';
+                document.getElementById('mission-name').value = mission.name;
+                document.getElementById('mission-location').value = mission.location;
+                document.getElementById('mission-status').value = mission.status;
+                document.getElementById('mission-date').value = mission.date ? mission.date.split('T')[0] : '';
+                document.getElementById('mission-coords').value = mission.lat && mission.lng ? `${mission.lat},${mission.lng}` : '';
+                document.getElementById('mission-desc').value = mission.description;
+                document.getElementById('mission-plan-a').value = mission.planA || '';
+                document.getElementById('mission-plan-b').value = mission.planB || '';
+               
+                // Carica foto esistenti
+                if (mission.photos && mission.photos.length > 0) {
+                    uploadedPhotos = mission.photos.map((url, index) => ({
+                        id: index,
+                        dataUrl: url,
+                        file: null
+                    }));
+                    updatePhotoPreview(document.getElementById('photo-preview'));
+                }
+               
+                closeDetailModal();
+                document.getElementById('mission-modal').style.display = 'flex';
             }
         };
        
@@ -2001,11 +2152,38 @@
             document.getElementById('mission-date').value = nextSaturday.toISOString().split('T')[0];
            
             document.getElementById('mission-modal').style.display = 'flex';
+        }
+       
+        function showMobileAddForm() {
+            editingMissionId = null;
+            uploadedPhotos = [];
+            document.getElementById('mobile-form-title').textContent = 'Add New Spot';
+            document.getElementById('mobile-mission-form').reset();
+           
+            // Imposta data predefinita (prossimo sabato)
+            const today = new Date();
+            const daysUntilSaturday = (6 - today.getDay() + 7) % 7 || 7;
+            const nextSaturday = new Date(today);
+            nextSaturday.setDate(today.getDate() + daysUntilSaturday);
+            document.getElementById('mobile-mission-date').value = nextSaturday.toISOString().split('T')[0];
+           
+            showMobileForm();
+        }
+       
+        function showMobileForm() {
+            document.getElementById('mobile-form-page').style.display = 'block';
+            document.body.style.overflow = 'hidden';
            
             // Focus sul primo campo
             setTimeout(() => {
-                document.getElementById('mission-name').focus();
+                document.getElementById('mobile-mission-name').focus();
             }, 100);
+        }
+       
+        function hideMobileForm() {
+            document.getElementById('mobile-form-page').style.display = 'none';
+            document.body.style.overflow = 'auto';
+            uploadedPhotos = [];
         }
        
         function closeDetailModal() {
@@ -2028,9 +2206,57 @@
             });
            
             // Setup bottone add su mobile
-            document.getElementById('mobile-add-btn').addEventListener('click', showAddMissionModal);
+            document.getElementById('mobile-add-btn').addEventListener('click', showMobileAddForm);
            
-            // Previeni zoom su input su iOS
+            // Setup form mobile
+            document.getElementById('close-mobile-form').addEventListener('click', hideMobileForm);
+            document.getElementById('mobile-cancel-btn').addEventListener('click', hideMobileForm);
+           
+            // Setup geolocation per mobile
+            document.getElementById('mobile-get-current-location').addEventListener('click', getCurrentLocation);
+           
+            // Setup submit form mobile
+            document.getElementById('mobile-mission-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+               
+                const saveBtn = document.getElementById('mobile-save-btn');
+                const originalText = saveBtn.innerHTML;
+                saveBtn.innerHTML = '<div class="loading" style="width: 20px; height: 20px; display: inline-block; margin-right: 8px;"></div> Saving...';
+                saveBtn.disabled = true;
+               
+                try {
+                    // Parse coordinates
+                    const coordsInput = document.getElementById('mobile-mission-coords').value;
+                    const coords = parseCoordinates(coordsInput);
+                   
+                    if (!coords) {
+                        throw new Error('Please enter valid coordinates (e.g., 45.4642,9.1900)');
+                    }
+                   
+                    const spotData = {
+                        name: document.getElementById('mobile-mission-name').value,
+                        location: document.getElementById('mobile-mission-location').value,
+                        status: document.getElementById('mobile-mission-status').value,
+                        date: document.getElementById('mobile-mission-date').value || null,
+                        lat: coords.lat,
+                        lng: coords.lng,
+                        description: document.getElementById('mobile-mission-desc').value,
+                        planA: document.getElementById('mobile-mission-plan-a').value,
+                        planB: document.getElementById('mobile-mission-plan-b').value
+                    };
+                   
+                    await saveSpot(spotData);
+                    hideMobileForm();
+                } catch (error) {
+                    console.error('Save error:', error);
+                    showMessage(error.message || 'Error saving spot', 'error');
+                } finally {
+                    saveBtn.innerHTML = originalText;
+                    saveBtn.disabled = false;
+                }
+            });
+           
+            // Previeni zoom su iOS per input
             document.addEventListener('touchstart', function(e) {
                 if (e.target.type === 'number') {
                     e.target.blur();
@@ -2061,48 +2287,45 @@
             document.getElementById('add-mission-btn').addEventListener('click', showAddMissionModal);
             document.getElementById('get-current-location').addEventListener('click', getCurrentLocation);
            
-            // Setup modali
-            document.getElementById('close-modal').addEventListener('click', () => {
+            // Setup modali desktop
+            document.getElementById('close-modal')?.addEventListener('click', () => {
                 document.getElementById('mission-modal').style.display = 'none';
                 uploadedPhotos = [];
-                document.getElementById('photo-preview').innerHTML = '';
             });
            
-            document.getElementById('close-detail').addEventListener('click', closeDetailModal);
+            document.getElementById('close-detail')?.addEventListener('click', closeDetailModal);
            
-            document.getElementById('close-viewer').addEventListener('click', () => {
+            document.getElementById('close-viewer')?.addEventListener('click', () => {
                 document.getElementById('photo-viewer').style.display = 'none';
             });
            
-            document.getElementById('cancel-btn').addEventListener('click', () => {
+            document.getElementById('cancel-btn')?.addEventListener('click', () => {
                 document.getElementById('mission-modal').style.display = 'none';
                 uploadedPhotos = [];
-                document.getElementById('photo-preview').innerHTML = '';
             });
            
             // Chiudi modali cliccando all'esterno
-            document.getElementById('mission-modal').addEventListener('click', (e) => {
+            document.getElementById('mission-modal')?.addEventListener('click', (e) => {
                 if (e.target === document.getElementById('mission-modal')) {
                     document.getElementById('mission-modal').style.display = 'none';
                     uploadedPhotos = [];
-                    document.getElementById('photo-preview').innerHTML = '';
                 }
             });
            
-            document.getElementById('detail-modal').addEventListener('click', (e) => {
+            document.getElementById('detail-modal')?.addEventListener('click', (e) => {
                 if (e.target === document.getElementById('detail-modal')) {
                     closeDetailModal();
                 }
             });
            
-            document.getElementById('photo-viewer').addEventListener('click', (e) => {
+            document.getElementById('photo-viewer')?.addEventListener('click', (e) => {
                 if (e.target === document.getElementById('photo-viewer')) {
                     document.getElementById('photo-viewer').style.display = 'none';
                 }
             });
            
-            // Setup form
-            document.getElementById('mission-form').addEventListener('submit', async (e) => {
+            // Setup form desktop
+            document.getElementById('mission-form')?.addEventListener('submit', async (e) => {
                 e.preventDefault();
                
                 const saveBtn = document.getElementById('save-btn');
@@ -2134,7 +2357,6 @@
                     await saveSpot(spotData);
                     document.getElementById('mission-modal').style.display = 'none';
                     uploadedPhotos = [];
-                    document.getElementById('photo-preview').innerHTML = '';
                 } catch (error) {
                     console.error('Save error:', error);
                     showMessage(error.message || 'Error saving spot', 'error');
@@ -2154,15 +2376,6 @@
             // Gestisci resize finestra
             window.addEventListener('resize', () => {
                 if (map) map.invalidateSize();
-            });
-           
-            // Disabilita drag and drop per file su tutto il body
-            document.addEventListener('dragover', (e) => {
-                e.preventDefault();
-            });
-           
-            document.addEventListener('drop', (e) => {
-                e.preventDefault();
             });
         });
     </script>
