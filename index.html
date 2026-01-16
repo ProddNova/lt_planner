@@ -7,15 +7,6 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script>
-        // Inizializza prima la mappa Leaflet
-        document.addEventListener('DOMContentLoaded', function() {
-            if (typeof L !== 'undefined') {
-                console.log('✅ Leaflet caricato correttamente');
-            }
-        });
-    </script>
     <style>
         :root {
             --bg-primary: #0a0a0a;
@@ -398,14 +389,9 @@
             color: var(--warning);
         }
        
-        .badge-active {
+        .badge-completed {
             background: rgba(0, 255, 136, 0.15);
             color: var(--accent);
-        }
-       
-        .badge-completed {
-            background: rgba(255, 255, 255, 0.1);
-            color: var(--text-dim);
         }
        
         .card-location {
@@ -589,6 +575,70 @@
         .form-group textarea:focus {
             outline: none;
             border-color: var(--accent);
+        }
+       
+        /* MULTI-SELECT PER ALTERNATIVE SPOTS */
+        .alternative-spots-container {
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem;
+            background: var(--bg-card);
+            max-height: 200px;
+            overflow-y: auto;
+        }
+       
+        .alternative-spot-item {
+            display: flex;
+            align-items: center;
+            padding: 0.5rem;
+            margin-bottom: 0.5rem;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.05);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+       
+        .alternative-spot-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+       
+        .alternative-spot-item.selected {
+            background: rgba(0, 255, 136, 0.15);
+            border: 1px solid var(--accent);
+        }
+       
+        .alternative-spot-checkbox {
+            margin-right: 0.75rem;
+            width: 18px;
+            height: 18px;
+        }
+       
+        .alternative-spot-name {
+            flex: 1;
+            font-size: 0.9rem;
+        }
+       
+        .alternative-spot-status {
+            font-size: 0.7rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 12px;
+            margin-left: 0.5rem;
+        }
+       
+        .alternative-spot-status.planned {
+            background: rgba(255, 170, 0, 0.15);
+            color: var(--warning);
+        }
+       
+        .alternative-spot-status.completed {
+            background: rgba(0, 255, 136, 0.15);
+            color: var(--accent);
+        }
+       
+        .alternative-spots-help {
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            margin-top: 0.5rem;
         }
        
         /* PHOTO UPLOAD SEMPLICE */
@@ -826,6 +876,36 @@
             line-height: 1.5;
         }
        
+        /* ALTERNATIVE SPOTS IN DETAIL VIEW */
+        .alternative-spots-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+       
+        .alternative-spot-link {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+       
+        .alternative-spot-link:hover {
+            border-color: var(--accent);
+            background: rgba(0, 255, 136, 0.1);
+            transform: translateX(5px);
+        }
+       
+        .alternative-spot-link i {
+            margin-right: 0.75rem;
+            color: var(--accent);
+        }
+       
         .action-buttons {
             display: flex;
             gap: 1rem;
@@ -933,61 +1013,6 @@
         .message.error {
             border-color: var(--danger);
             color: var(--danger);
-        }
-       
-        /* MULTI-SELECT STYLES */
-        .multi-select-container {
-            position: relative;
-        }
-       
-        .multi-select {
-            height: 150px;
-            max-height: 150px;
-            overflow-y: auto;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 0.5rem;
-            background: var(--bg-card);
-        }
-       
-        .multi-select-option {
-            padding: 0.5rem;
-            margin: 0.25rem 0;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-       
-        .multi-select-option:hover {
-            background: rgba(0, 255, 136, 0.1);
-        }
-       
-        .multi-select-option.selected {
-            background: rgba(0, 255, 136, 0.2);
-            border: 1px solid var(--accent);
-        }
-       
-        .multi-select-option input[type="checkbox"] {
-            margin: 0;
-        }
-       
-        .multi-select-option .spot-name {
-            flex: 1;
-            font-size: 0.9rem;
-        }
-       
-        .multi-select-option .spot-location {
-            font-size: 0.8rem;
-            color: var(--text-dim);
-        }
-       
-        .selected-spots-summary {
-            font-size: 0.8rem;
-            color: var(--text-dim);
-            margin-top: 0.5rem;
         }
        
         /* SCROLLBAR */
@@ -1156,8 +1181,9 @@
                 grid-template-columns: repeat(3, 1fr);
             }
            
-            .multi-select {
-                height: 120px;
+            /* Alternative spots su mobile */
+            .alternative-spots-container {
+                max-height: 150px;
             }
         }
        
@@ -1401,14 +1427,13 @@
                         <textarea id="mobile-mission-plan-a" rows="3" placeholder="How to get in..."></textarea>
                     </div>
                     <div class="form-group full">
-                        <label><i class="fas fa-map-marked-alt"></i> Alternative Spots (max 3)</label>
-                        <div class="multi-select-container">
-                            <div class="multi-select" id="mobile-alternative-spots-select">
-                                <!-- Opzioni verranno popolate dinamicamente -->
-                            </div>
-                            <div class="selected-spots-summary" id="mobile-selected-spots-summary">
-                                No alternative spots selected
-                            </div>
+                        <label><i class="fas fa-exchange-alt"></i> Alternative Spots (max 3)</label>
+                        <div class="alternative-spots-container" id="mobile-alternative-spots-container">
+                            <div class="loading" style="margin: 2rem auto;"></div>
+                            <p style="text-align: center; color: var(--text-dim);">Loading spots...</p>
+                        </div>
+                        <div class="alternative-spots-help">
+                            Select up to 3 spots that are good alternatives to this one
                         </div>
                     </div>
                     <div class="form-group full">
@@ -1428,6 +1453,7 @@
                         <div class="photo-preview-grid" id="mobile-photo-preview"></div>
                     </div>
                 </div>
+                <input type="hidden" id="mobile-alternative-spots-input">
             </form>
         </div>
         <div class="mobile-form-footer">
@@ -1494,14 +1520,13 @@
                             <textarea id="mission-plan-a" rows="3" placeholder="How to get in..."></textarea>
                         </div>
                         <div class="form-group full">
-                            <label><i class="fas fa-map-marked-alt"></i> Alternative Spots (max 3)</label>
-                            <div class="multi-select-container">
-                                <div class="multi-select" id="alternative-spots-select">
-                                    <!-- Opzioni verranno popolate dinamicamente -->
-                                </div>
-                                <div class="selected-spots-summary" id="selected-spots-summary">
-                                    No alternative spots selected
-                                </div>
+                            <label><i class="fas fa-exchange-alt"></i> Alternative Spots (max 3)</label>
+                            <div class="alternative-spots-container" id="alternative-spots-container">
+                                <div class="loading" style="margin: 2rem auto;"></div>
+                                <p style="text-align: center; color: var(--text-dim);">Loading spots...</p>
+                            </div>
+                            <div class="alternative-spots-help">
+                                Select up to 3 spots that are good alternatives to this one
                             </div>
                         </div>
                         <div class="form-group full">
@@ -1521,6 +1546,7 @@
                             <div class="photo-preview-grid" id="photo-preview"></div>
                         </div>
                     </div>
+                    <input type="hidden" id="alternative-spots-input">
                 </form>
             </div>
             <div class="modal-footer">
@@ -1537,14 +1563,20 @@
         <img id="viewer-image" src="" alt="">
     </div>
 
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        const API_URL = window.location.hostname === 'localhost'
-            ? 'http://localhost:3000/api'
+        // ✅ CORREZIONE CRITICA: URL API corretto
+        const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+            ? 'http://localhost:10000/api'
             : '/api';
+        
+        console.log('🌐 API URL:', API_URL);
+        console.log('📍 Current hostname:', window.location.hostname);
        
         let map = null;
         let markers = [];
         let missions = [];
+        let allSpotsForSelection = [];
         let currentView = 'missions';
         let editingMissionId = null;
         let currentDetailMissionId = null;
@@ -1630,148 +1662,83 @@
             );
         }
        
-        // Setup per selezionare alternative spots
-        function setupAlternativeSpotsSelect() {
-            updateAlternativeSpotsSelect();
+        // Carica tutti gli spot per la selezione (senza foto per performance)
+        async function loadSpotsForSelection() {
+            try {
+                console.log('📋 Loading spots for selection...');
+                const response = await fetch(`${API_URL}/spots-minimal`);
+                if (!response.ok) throw new Error('Network error');
+                const data = await response.json();
+                allSpotsForSelection = data;
+                console.log(`✅ Loaded ${data.length} spots for selection`);
+                return data;
+            } catch (error) {
+                console.error('Error loading spots for selection:', error);
+                return [];
+            }
+        }
+       
+        // Aggiorna la UI per la selezione degli alternative spots
+        function updateAlternativeSpotsUI(containerId, selectedIds = [], excludeId = null) {
+            const container = document.getElementById(containerId);
+            if (!container || allSpotsForSelection.length === 0) return;
            
-            // Re-popola quando si apre il form
-            document.getElementById('mission-modal')?.addEventListener('click', () => {
-                setTimeout(() => {
-                    updateAlternativeSpotsSelect();
-                }, 100);
-            });
+            // Filtra escludendo lo spot corrente (se in modalità editing)
+            const spotsToShow = allSpotsForSelection.filter(spot => spot._id !== excludeId);
            
-            document.getElementById('mobile-form-page')?.addEventListener('click', () => {
-                setTimeout(() => {
-                    updateAlternativeSpotsSelect();
-                }, 100);
+            container.innerHTML = '';
+           
+            if (spotsToShow.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: var(--text-dim); padding: 2rem;">No other spots available</p>';
+                return;
+            }
+           
+            spotsToShow.forEach(spot => {
+                const isSelected = selectedIds.includes(spot._id);
+                const item = document.createElement('div');
+                item.className = `alternative-spot-item ${isSelected ? 'selected' : ''}`;
+                item.innerHTML = `
+                    <input type="checkbox" class="alternative-spot-checkbox" 
+                           ${isSelected ? 'checked' : ''}
+                           data-id="${spot._id}"
+                           onchange="toggleAlternativeSpot('${spot._id}', '${containerId}')">
+                    <span class="alternative-spot-name">${spot.name}</span>
+                    <span class="alternative-spot-status ${spot.status}">${spot.status === 'planned' ? 'To Explore' : 'Explored'}</span>
+                `;
+                container.appendChild(item);
             });
         }
        
-        function updateAlternativeSpotsSelect() {
-            const desktopContainer = document.getElementById('alternative-spots-select');
-            const mobileContainer = document.getElementById('mobile-alternative-spots-select');
+        // Funzione globale per toggle degli alternative spots
+        window.toggleAlternativeSpot = function(spotId, containerId) {
+            const checkbox = document.querySelector(`#${containerId} input[data-id="${spotId}"]`);
+            const isChecked = checkbox.checked;
            
-            if (!desktopContainer && !mobileContainer) return;
-           
-            // Filtra per escludere lo spot corrente in modalità edit
-            const availableSpots = missions.filter(spot => 
-                !editingMissionId || spot._id !== editingMissionId
-            );
-           
-            // Aggiorna desktop
-            if (desktopContainer) {
-                desktopContainer.innerHTML = '';
-                availableSpots.forEach(spot => {
-                    const isSelected = selectedAlternativeSpots.includes(spot._id);
-                    const option = document.createElement('div');
-                    option.className = `multi-select-option ${isSelected ? 'selected' : ''}`;
-                    option.innerHTML = `
-                        <input type="checkbox" id="alt-${spot._id}" ${isSelected ? 'checked' : ''}>
-                        <span class="spot-name">${spot.name}</span>
-                        <span class="spot-location">${spot.location}</span>
-                    `;
-                    option.addEventListener('click', (e) => {
-                        if (e.target.type !== 'checkbox') {
-                            const checkbox = option.querySelector('input[type="checkbox"]');
-                            checkbox.checked = !checkbox.checked;
-                            toggleAlternativeSpot(spot._id, checkbox.checked);
-                        }
-                    });
-                    desktopContainer.appendChild(option);
-                });
-               
-                // Aggiungi event listener per checkbox
-                desktopContainer.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
-                    checkbox.addEventListener('change', (e) => {
-                        const spotId = e.target.id.replace('alt-', '');
-                        toggleAlternativeSpot(spotId, e.target.checked);
-                    });
-                });
-            }
-           
-            // Aggiorna mobile
-            if (mobileContainer) {
-                mobileContainer.innerHTML = '';
-                availableSpots.forEach(spot => {
-                    const isSelected = selectedAlternativeSpots.includes(spot._id);
-                    const option = document.createElement('div');
-                    option.className = `multi-select-option ${isSelected ? 'selected' : ''}`;
-                    option.innerHTML = `
-                        <input type="checkbox" id="mobile-alt-${spot._id}" ${isSelected ? 'checked' : ''}>
-                        <span class="spot-name">${spot.name}</span>
-                        <span class="spot-location">${spot.location}</span>
-                    `;
-                    option.addEventListener('click', (e) => {
-                        if (e.target.type !== 'checkbox') {
-                            const checkbox = option.querySelector('input[type="checkbox"]');
-                            checkbox.checked = !checkbox.checked;
-                            toggleAlternativeSpot(spot._id, checkbox.checked);
-                        }
-                    });
-                    mobileContainer.appendChild(option);
-                });
-               
-                // Aggiungi event listener per checkbox
-                mobileContainer.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
-                    checkbox.addEventListener('change', (e) => {
-                        const spotId = e.target.id.replace('mobile-alt-', '');
-                        toggleAlternativeSpot(spotId, e.target.checked);
-                    });
-                });
-            }
-           
-            updateSelectedSpotsSummary();
-        }
-       
-        function toggleAlternativeSpot(spotId, isSelected) {
-            if (isSelected) {
-                if (selectedAlternativeSpots.length < 3) {
-                    selectedAlternativeSpots.push(spotId);
-                } else {
+            if (isChecked) {
+                // Controlla se già selezionati 3 spots
+                if (selectedAlternativeSpots.length >= 3) {
+                    checkbox.checked = false;
                     showMessage('Maximum 3 alternative spots allowed', 'error');
-                    // Deseleziona il checkbox
-                    document.getElementById(`alt-${spotId}`)?.checked = false;
-                    document.getElementById(`mobile-alt-${spotId}`)?.checked = false;
                     return;
                 }
+                selectedAlternativeSpots.push(spotId);
             } else {
                 selectedAlternativeSpots = selectedAlternativeSpots.filter(id => id !== spotId);
             }
            
-            updateSelectedSpotsSummary();
-            updateAlternativeSpotsSelect(); // Refresh per aggiornare le classi selected
-        }
-       
-        function updateSelectedSpotsSummary() {
-            const selectedNames = selectedAlternativeSpots.map(id => {
-                const spot = missions.find(s => s._id === id);
-                return spot ? spot.name : '';
-            }).filter(name => name);
-           
-            const desktopSummary = document.getElementById('selected-spots-summary');
-            const mobileSummary = document.getElementById('mobile-selected-spots-summary');
-           
-            if (desktopSummary) {
-                if (selectedNames.length > 0) {
-                    desktopSummary.textContent = `Selected: ${selectedNames.join(', ')}`;
-                    desktopSummary.style.color = 'var(--accent)';
-                } else {
-                    desktopSummary.textContent = 'No alternative spots selected';
-                    desktopSummary.style.color = 'var(--text-dim)';
-                }
+            // Aggiorna l'input nascosto
+            if (isMobile) {
+                document.getElementById('mobile-alternative-spots-input').value = JSON.stringify(selectedAlternativeSpots);
+            } else {
+                document.getElementById('alternative-spots-input').value = JSON.stringify(selectedAlternativeSpots);
             }
            
-            if (mobileSummary) {
-                if (selectedNames.length > 0) {
-                    mobileSummary.textContent = `Selected: ${selectedNames.join(', ')}`;
-                    mobileSummary.style.color = 'var(--accent)';
-                } else {
-                    mobileSummary.textContent = 'No alternative spots selected';
-                    mobileSummary.style.color = 'var(--text-dim)';
-                }
+            // Aggiorna la UI
+            const item = checkbox.closest('.alternative-spot-item');
+            if (item) {
+                item.classList.toggle('selected', isChecked);
             }
-        }
+        };
        
         // Gestione upload foto semplice
         function setupPhotoUpload() {
@@ -1889,25 +1856,32 @@
        
         async function fetchSpots() {
             try {
+                console.log('🔄 Fetching spots from API...');
                 const response = await fetch(`${API_URL}/spots`);
-                if (!response.ok) throw new Error('Network error');
+                console.log('📡 Response status:', response.status);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
                 const data = await response.json();
+                console.log(`✅ Found ${data.length} spots`);
                 missions = data;
                 renderMissions();
                 updateStats();
                 updateMap();
-                // Aggiorna anche la select degli alternative spots
-                updateAlternativeSpotsSelect();
                 return data;
             } catch (error) {
-                console.error('Error fetching spots:', error);
+                console.error('❌ Error fetching spots:', error);
                 const container = document.getElementById('missions-container');
                 container.innerHTML = `
                     <div class="empty-state" style="grid-column: 1 / -1;">
                         <div class="empty-state-icon">⚠️</div>
                         <h2>Connection Error</h2>
                         <p>Cannot connect to server. Make sure backend is running.</p>
-                        <button class="btn" onclick="fetchSpots()">Retry</button>
+                        <p style="font-size: 0.8rem; margin-top: 0.5rem; color: var(--danger);">Error: ${error.message}</p>
+                        <button class="btn" onclick="fetchSpots()" style="margin-top: 1rem;">Retry</button>
+                        <button class="btn btn-secondary" onclick="window.location.reload()" style="margin-top: 0.5rem;">Reload Page</button>
                     </div>
                 `;
                 return [];
@@ -1950,7 +1924,7 @@
                     spotData.photos = photoUrls;
                 }
                
-                // Aggiungi alternative spots se ce ne sono
+                // Aggiungi alternative spots se presenti
                 if (selectedAlternativeSpots.length > 0) {
                     spotData.alternativeSpots = selectedAlternativeSpots;
                 }
@@ -2029,14 +2003,12 @@
        
         function initMap() {
             if (map) return;
+            map = L.map('map').setView([45.4642, 9.1900], 6);
            
-            // Crea la mappa con vista iniziale su Italia
-            map = L.map('map').setView([41.8719, 12.5674], 6);
-           
-            // Usa layer satellite di Google
+            // Google Satellite tile layer
             L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
-                maxZoom: 19,
-                attribution: '© Google Satellite'
+                attribution: '© Google Maps',
+                maxZoom: 20
             }).addTo(map);
            
             updateMap();
@@ -2052,8 +2024,7 @@
                     let iconColor = 'blue';
                     switch(mission.status) {
                         case 'planned': iconColor = 'orange'; break;
-                        case 'active': iconColor = 'green'; break;
-                        case 'completed': iconColor = 'gray'; break;
+                        case 'completed': iconColor = 'green'; break;
                     }
                    
                     const customIcon = L.divIcon({
@@ -2166,36 +2137,16 @@
                         ` : ''}
                         <p class="card-description">${mission.description}</p>
                         <div class="card-footer">
-                            <div class="card-date">${mission.status === 'planned' ? '⏳ To Explore' : '✅ Explored'}</div>
-                            <button class="btn-small view-spot-btn" data-id="${mission._id}">View</button>
+                            <div class="card-date">${statusText === 'Explored' ? '✅' : '📌'}</div>
+                            <button class="btn-small" onclick="showMissionDetail('${mission._id}')">View</button>
                         </div>
                     </div>
                 `;
                 container.appendChild(card);
             });
-           
-            // Aggiungi event listener per i bottoni "View"
-            container.querySelectorAll('.view-spot-btn').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    const spotId = btn.getAttribute('data-id');
-                    showMissionDetail(spotId);
-                });
-            });
-           
-            // Aggiungi event listener per l'intera card
-            container.querySelectorAll('.card').forEach(card => {
-                card.addEventListener('click', function() {
-                    const btn = this.querySelector('.view-spot-btn');
-                    if (btn) {
-                        const spotId = btn.getAttribute('data-id');
-                        showMissionDetail(spotId);
-                    }
-                });
-            });
         }
        
-        window.showMissionDetail = function(id) {
+        async function showMissionDetail(id) {
             const mission = missions.find(m => m._id === id);
             if (!mission) return;
            
@@ -2207,23 +2158,31 @@
                 case 'completed': statusText = 'Explored'; break;
             }
            
-            // Ottieni i dettagli degli alternative spots
+            document.getElementById('detail-title').textContent = mission.name;
+           
+            // Carica gli alternative spots dettagliati se presenti
             let alternativeSpotsHTML = '';
             if (mission.alternativeSpots && mission.alternativeSpots.length > 0) {
-                const alternativeSpots = mission.alternativeSpots.map(spotId => 
-                    missions.find(m => m._id === spotId)
-                ).filter(spot => spot);
+                const alternativeSpots = missions.filter(m => 
+                    mission.alternativeSpots.includes(m._id)
+                );
                
                 if (alternativeSpots.length > 0) {
                     alternativeSpotsHTML = `
                         <div class="detail-section">
-                            <h3>Alternative Spots</h3>
-                            <div class="info-grid">
+                            <h3><i class="fas fa-exchange-alt"></i> Alternative Spots</h3>
+                            <div class="alternative-spots-list">
                                 ${alternativeSpots.map(spot => `
-                                    <div class="info-item" style="cursor: pointer;" onclick="showMissionDetail('${spot._id}')">
-                                        <span class="info-label">📍 ${spot.name}</span>
-                                        <span class="info-value">${spot.location}</span>
-                                    </div>
+                                    <a href="#" class="alternative-spot-link" onclick="showMissionDetail('${spot._id}'); return false;">
+                                        <i class="fas fa-map-marker-alt"></i>
+                                        <div style="flex: 1;">
+                                            <div style="font-weight: 600;">${spot.name}</div>
+                                            <div style="font-size: 0.875rem; color: var(--text-dim);">📍 ${spot.location}</div>
+                                        </div>
+                                        <span class="alternative-spot-status ${spot.status}" style="font-size: 0.7rem;">
+                                            ${spot.status === 'planned' ? 'To Explore' : 'Explored'}
+                                        </span>
+                                    </a>
                                 `).join('')}
                             </div>
                         </div>
@@ -2231,7 +2190,6 @@
                 }
             }
            
-            document.getElementById('detail-title').textContent = mission.name;
             document.getElementById('detail-body').innerHTML = `
                 <div class="detail-container">
                     <div class="detail-header">
@@ -2292,6 +2250,16 @@
                                         <span class="info-label">Status</span>
                                         <span class="info-value">${statusText}</span>
                                     </div>
+                                    <div class="info-item">
+                                        <span class="info-label">Created</span>
+                                        <span class="info-value">${new Date(mission.createdAt).toLocaleDateString('it-IT')}</span>
+                                    </div>
+                                    ${mission.alternativeSpots && mission.alternativeSpots.length > 0 ? `
+                                    <div class="info-item">
+                                        <span class="info-label">Alternative Spots</span>
+                                        <span class="info-value">${mission.alternativeSpots.length}</span>
+                                    </div>
+                                    ` : ''}
                                 </div>
                             </div>
                         </div>
@@ -2307,9 +2275,10 @@
             if (mission.lat && mission.lng) {
                 setTimeout(() => {
                     const detailMap = L.map('detail-map').setView([mission.lat, mission.lng], 15);
+                    // Google Satellite per la mappa di dettaglio
                     L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
-                        maxZoom: 19,
-                        attribution: '© Google Satellite'
+                        attribution: '© Google Maps',
+                        maxZoom: 20
                     }).addTo(detailMap);
                    
                     const marker = L.marker([mission.lat, mission.lng]).addTo(detailMap);
@@ -2318,12 +2287,7 @@
             }
            
             document.getElementById('detail-modal').style.display = 'flex';
-        };
-       
-        window.showInList = function(id) {
-            switchView('missions');
-            setTimeout(() => showMissionDetail(id), 300);
-        };
+        }
        
         window.openInGoogleMaps = function(lat, lng) {
             window.open(`https://www.google.com/maps?q=${lat},${lng}`, '_blank');
@@ -2334,13 +2298,16 @@
             document.getElementById('photo-viewer').style.display = 'flex';
         };
        
-        window.editMission = function(id) {
+        async function editMission(id) {
             const mission = missions.find(m => m._id === id);
             if (!mission) return;
            
             editingMissionId = id;
             uploadedPhotos = [];
             selectedAlternativeSpots = mission.alternativeSpots || [];
+           
+            // Carica tutti gli spot per la selezione
+            await loadSpotsForSelection();
            
             if (isMobile) {
                 // Usa il form mobile
@@ -2351,6 +2318,10 @@
                 document.getElementById('mobile-mission-coords').value = mission.lat && mission.lng ? `${mission.lat},${mission.lng}` : '';
                 document.getElementById('mobile-mission-desc').value = mission.description;
                 document.getElementById('mobile-mission-plan-a').value = mission.planA || '';
+                document.getElementById('mobile-alternative-spots-input').value = JSON.stringify(selectedAlternativeSpots);
+               
+                // Aggiorna la UI degli alternative spots
+                updateAlternativeSpotsUI('mobile-alternative-spots-container', selectedAlternativeSpots, id);
                
                 // Carica foto esistenti
                 if (mission.photos && mission.photos.length > 0) {
@@ -2359,29 +2330,11 @@
                         dataUrl: url,
                         file: null
                     }));
-                    // Aggiorna la preview delle foto
-                    const previewContainer = document.getElementById('mobile-photo-preview');
-                    if (previewContainer) {
-                        previewContainer.innerHTML = '';
-                        uploadedPhotos.forEach((photo, index) => {
-                            const preview = document.createElement('div');
-                            preview.className = 'photo-preview';
-                            preview.innerHTML = `
-                                <img src="${photo.dataUrl}" alt="Preview ${index + 1}">
-                                <button type="button" class="remove-photo" data-index="${index}">×</button>
-                            `;
-                            previewContainer.appendChild(preview);
-                        });
-                    }
+                    updatePhotoPreview(document.getElementById('mobile-photo-preview'));
                 }
                
                 closeDetailModal();
                 showMobileForm();
-               
-                // Aggiorna la select degli alternative spots dopo un breve delay
-                setTimeout(() => {
-                    updateAlternativeSpotsSelect();
-                }, 300);
             } else {
                 // Usa il modal desktop
                 document.getElementById('modal-title').textContent = 'Edit Spot';
@@ -2391,6 +2344,10 @@
                 document.getElementById('mission-coords').value = mission.lat && mission.lng ? `${mission.lat},${mission.lng}` : '';
                 document.getElementById('mission-desc').value = mission.description;
                 document.getElementById('mission-plan-a').value = mission.planA || '';
+                document.getElementById('alternative-spots-input').value = JSON.stringify(selectedAlternativeSpots);
+               
+                // Aggiorna la UI degli alternative spots
+                updateAlternativeSpotsUI('alternative-spots-container', selectedAlternativeSpots, id);
                
                 // Carica foto esistenti
                 if (mission.photos && mission.photos.length > 0) {
@@ -2399,60 +2356,48 @@
                         dataUrl: url,
                         file: null
                     }));
-                    // Aggiorna la preview delle foto
-                    const previewContainer = document.getElementById('photo-preview');
-                    if (previewContainer) {
-                        previewContainer.innerHTML = '';
-                        uploadedPhotos.forEach((photo, index) => {
-                            const preview = document.createElement('div');
-                            preview.className = 'photo-preview';
-                            preview.innerHTML = `
-                                <img src="${photo.dataUrl}" alt="Preview ${index + 1}">
-                                <button type="button" class="remove-photo" data-index="${index}">×</button>
-                            `;
-                            previewContainer.appendChild(preview);
-                        });
-                    }
+                    updatePhotoPreview(document.getElementById('photo-preview'));
                 }
                
                 closeDetailModal();
                 document.getElementById('mission-modal').style.display = 'flex';
-               
-                // Aggiorna la select degli alternative spots dopo un breve delay
-                setTimeout(() => {
-                    updateAlternativeSpotsSelect();
-                }, 300);
             }
-        };
-       
-        function showAddMissionModal() {
-            editingMissionId = null;
-            uploadedPhotos = [];
-            selectedAlternativeSpots = [];
-            document.getElementById('modal-title').textContent = 'Add New Spot';
-            document.getElementById('mission-form').reset();
-           
-            document.getElementById('mission-modal').style.display = 'flex';
-           
-            // Aggiorna la select degli alternative spots
-            setTimeout(() => {
-                updateAlternativeSpotsSelect();
-            }, 100);
         }
        
-        function showMobileAddForm() {
+        async function showAddMissionModal() {
             editingMissionId = null;
             uploadedPhotos = [];
             selectedAlternativeSpots = [];
+           
+            // Carica tutti gli spot per la selezione
+            await loadSpotsForSelection();
+           
+            document.getElementById('modal-title').textContent = 'Add New Spot';
+            document.getElementById('mission-form').reset();
+            document.getElementById('alternative-spots-input').value = '';
+           
+            // Aggiorna la UI degli alternative spots
+            updateAlternativeSpotsUI('alternative-spots-container', []);
+           
+            document.getElementById('mission-modal').style.display = 'flex';
+        }
+       
+        async function showMobileAddForm() {
+            editingMissionId = null;
+            uploadedPhotos = [];
+            selectedAlternativeSpots = [];
+           
+            // Carica tutti gli spot per la selezione
+            await loadSpotsForSelection();
+           
             document.getElementById('mobile-form-title').textContent = 'Add New Spot';
             document.getElementById('mobile-mission-form').reset();
+            document.getElementById('mobile-alternative-spots-input').value = '';
+           
+            // Aggiorna la UI degli alternative spots
+            updateAlternativeSpotsUI('mobile-alternative-spots-container', []);
            
             showMobileForm();
-           
-            // Aggiorna la select degli alternative spots
-            setTimeout(() => {
-                updateAlternativeSpotsSelect();
-            }, 100);
         }
        
         function showMobileForm() {
@@ -2526,9 +2471,18 @@
                         lat: coords.lat,
                         lng: coords.lng,
                         description: document.getElementById('mobile-mission-desc').value,
-                        planA: document.getElementById('mobile-mission-plan-a').value,
-                        alternativeSpots: selectedAlternativeSpots
+                        planA: document.getElementById('mobile-mission-plan-a').value
                     };
+                   
+                    // Aggiungi alternative spots se selezionati
+                    const altSpotsInput = document.getElementById('mobile-alternative-spots-input').value;
+                    if (altSpotsInput) {
+                        try {
+                            spotData.alternativeSpots = JSON.parse(altSpotsInput);
+                        } catch (e) {
+                            console.error('Error parsing alternative spots:', e);
+                        }
+                    }
                    
                     await saveSpot(spotData);
                     hideMobileForm();
@@ -2559,9 +2513,6 @@
         document.addEventListener('DOMContentLoaded', async () => {
             // Setup upload foto
             setupPhotoUpload();
-           
-            // Setup alternative spots
-            setupAlternativeSpotsSelect();
            
             // Setup mobile layout se necessario
             setupMobileLayout();
@@ -2640,9 +2591,18 @@
                         lat: coords.lat,
                         lng: coords.lng,
                         description: document.getElementById('mission-desc').value,
-                        planA: document.getElementById('mission-plan-a').value,
-                        alternativeSpots: selectedAlternativeSpots
+                        planA: document.getElementById('mission-plan-a').value
                     };
+                   
+                    // Aggiungi alternative spots se selezionati
+                    const altSpotsInput = document.getElementById('alternative-spots-input').value;
+                    if (altSpotsInput) {
+                        try {
+                            spotData.alternativeSpots = JSON.parse(altSpotsInput);
+                        } catch (e) {
+                            console.error('Error parsing alternative spots:', e);
+                        }
+                    }
                    
                     await saveSpot(spotData);
                     document.getElementById('mission-modal').style.display = 'none';
@@ -2657,9 +2617,14 @@
                 }
             });
            
+            console.log('🚀 Starting application...');
+           
             // Carica dati iniziali
             await fetchSpots();
+            await loadSpotsForSelection();
             initMap();
+           
+            console.log('✅ Application started successfully!');
            
             // Auto-refresh ogni 30 secondi
             setInterval(fetchSpots, 30000);
