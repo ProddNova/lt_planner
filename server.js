@@ -70,7 +70,7 @@ const spotSchema = new mongoose.Schema({
     lng: { type: Number, required: true },
     description: { type: String, required: true },
     planA: { type: String },
-    alternativeSpots: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Spot' }], // Nuovo campo per spots alternativi
+    alternativeSpots: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Spot' }],
     photos: [{ type: String }],
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now }
@@ -123,7 +123,6 @@ app.get('/api/spots-minimal', async (req, res) => {
 app.post('/api/spots', async (req, res) => {
     try {
         console.log('📝 Creating new spot:', req.body.name);
-        // Converti alternativeSpots da array di stringhe a array di ObjectId
         const spotData = { ...req.body };
         if (spotData.alternativeSpots && Array.isArray(spotData.alternativeSpots)) {
             spotData.alternativeSpots = spotData.alternativeSpots
@@ -146,13 +145,11 @@ app.put('/api/spots/:id', async (req, res) => {
         const spot = await Spot.findById(req.params.id);
         if (!spot) return res.status(404).json({ error: 'Spot not found' });
 
-        // Conserva le foto esistenti se non vengono inviate nuove foto
         const updateData = { ...req.body };
         if (!updateData.photos && spot.photos) {
             updateData.photos = spot.photos;
         }
 
-        // Converti alternativeSpots da array di stringhe a array di ObjectId
         if (updateData.alternativeSpots && Array.isArray(updateData.alternativeSpots)) {
             updateData.alternativeSpots = updateData.alternativeSpots
                 .filter(id => mongoose.Types.ObjectId.isValid(id))
@@ -178,7 +175,6 @@ app.delete('/api/spots/:id', async (req, res) => {
         const spot = await Spot.findById(req.params.id);
         if (!spot) return res.status(404).json({ error: 'Spot not found' });
        
-        // Cancella le foto associate
         if (spot.photos && spot.photos.length > 0) {
             spot.photos.forEach(photoUrl => {
                 if (photoUrl.includes('/uploads/')) {
@@ -203,29 +199,26 @@ app.delete('/api/spots/:id', async (req, res) => {
 // Funzione helper per convertire HEIC/HEIF in JPEG
 async function convertHeicToJpeg(filePath) {
     try {
-        // Se non è HEIC, ritorna il percorso originale
         if (!filePath.toLowerCase().endsWith('.heic') && !filePath.toLowerCase().endsWith('.heif')) {
             return filePath;
         }
 
         const jpegPath = filePath.replace(/\.[^/.]+$/, ".jpg");
         
-        // Converti HEIC a JPEG usando sharp
         await sharp(filePath)
             .jpeg({ quality: 85 })
             .toFile(jpegPath);
         
-        // Cancella il file HEIC originale
         fs.unlinkSync(filePath);
         
         return jpegPath;
     } catch (error) {
         console.error('Error converting HEIC to JPEG:', error);
-        return filePath; // Ritorna il file originale in caso di errore
+        return filePath;
     }
 }
 
-// Endpoint per upload foto ottimizzato
+// Endpoint per upload foto
 app.post('/api/upload', upload.array('photos', 5), async (req, res) => {
     try {
         if (!req.files || req.files.length === 0) {
@@ -237,7 +230,6 @@ app.post('/api/upload', upload.array('photos', 5), async (req, res) => {
        
         for (const file of req.files) {
             try {
-                // Converti HEIC in JPEG se necessario
                 let processedFilePath = file.path;
                 if (file.originalname.toLowerCase().endsWith('.heic') || 
                     file.originalname.toLowerCase().endsWith('.heif')) {
@@ -245,11 +237,9 @@ app.post('/api/upload', upload.array('photos', 5), async (req, res) => {
                     file.filename = file.filename.replace(/\.[^/.]+$/, ".jpg");
                 }
 
-                // Crea thumbnail
                 const thumbnailFilename = `thumb-${file.filename}`;
                 const thumbnailPath = path.join('uploads', thumbnailFilename);
                
-                // Ottimizza l'immagine per il web
                 await sharp(processedFilePath)
                     .resize(1200, 1200, { 
                         fit: 'inside',
@@ -261,7 +251,6 @@ app.post('/api/upload', upload.array('photos', 5), async (req, res) => {
                     })
                     .toFile(path.join('uploads', `optimized-${file.filename}`));
                
-                // Crea thumbnail quadrata per anteprime
                 await sharp(processedFilePath)
                     .resize(400, 400, { 
                         fit: 'cover',
@@ -270,18 +259,15 @@ app.post('/api/upload', upload.array('photos', 5), async (req, res) => {
                     .jpeg({ quality: 80 })
                     .toFile(thumbnailPath);
                
-                // URL per l'immagine ottimizzata
                 const baseUrl = `${req.protocol}://${req.get('host')}`;
                 photoUrls.push(`${baseUrl}/uploads/optimized-${file.filename}`);
                
-                // Cancella il file originale non ottimizzato
                 if (fs.existsSync(processedFilePath) && processedFilePath !== path.join('uploads', `optimized-${file.filename}`)) {
                     fs.unlinkSync(processedFilePath);
                 }
                
             } catch (error) {
                 console.error('Error processing image:', error);
-                // Fallback: usa il file originale
                 const baseUrl = `${req.protocol}://${req.get('host')}`;
                 photoUrls.push(`${baseUrl}/uploads/${file.filename}`);
             }
@@ -340,7 +326,7 @@ app.delete('/api/photos/:filename', (req, res) => {
     }
 });
 
-// Test route con dettagli
+// Test route
 app.get('/api/test', async (req, res) => {
     try {
         const connectionState = mongoose.connection.readyState;
@@ -370,7 +356,7 @@ app.get('/api/test', async (req, res) => {
     }
 });
 
-// Health check dettagliato
+// Health check
 app.get('/api/health', (req, res) => {
     const state = mongoose.connection.readyState;
     const uploadsDir = path.join(__dirname, 'uploads');
@@ -442,10 +428,8 @@ app.post('/api/parse-coordinates', (req, res) => {
 function parseCoordinates(input) {
     input = input.trim();
    
-    // Se è un link Google Maps
     if (input.includes('google.com/maps') || input.includes('maps.app.goo.gl')) {
         try {
-            // Estrai le coordinate dal link
             const url = new URL(input);
             const q = url.searchParams.get('q');
             if (q) {
@@ -455,7 +439,6 @@ function parseCoordinates(input) {
                 }
             }
            
-            // Prova con @ formato (es: @45.4642,9.1900,15z)
             const match = input.match(/@(-?\d+\.?\d*),(-?\d+\.?\d*)/);
             if (match) {
                 return { lat: parseFloat(match[1]), lng: parseFloat(match[2]) };
@@ -465,7 +448,6 @@ function parseCoordinates(input) {
         }
     }
    
-    // Se è nel formato "lat,lng"
     const parts = input.split(',');
     if (parts.length === 2) {
         const lat = parseFloat(parts[0].trim());
@@ -475,7 +457,6 @@ function parseCoordinates(input) {
         }
     }
    
-    // Se è nel formato "lat lng"
     const parts2 = input.split(/[\s,;]+/);
     if (parts2.length >= 2) {
         const lat = parseFloat(parts2[0]);
@@ -511,7 +492,6 @@ async function connectToDatabase() {
         console.log('✅ Connesso a MongoDB Atlas');
         console.log(`📊 Database: ${mongoose.connection.db.databaseName}`);
        
-        // Test ping
         await mongoose.connection.db.admin().ping();
         console.log('📡 Database risponde correttamente');
        
@@ -537,7 +517,6 @@ async function seedDatabase() {
         if (count === 0) {
             console.log('📦 Inserimento dati di esempio...');
             
-            // Inserisci prima gli spot per avere ID validi
             const sampleSpots = [
                 {
                     name: "EX MANIFATTURA TABACCHI",
@@ -580,7 +559,6 @@ async function seedDatabase() {
             const insertedSpots = await Spot.insertMany(sampleSpots);
             console.log('✅ Dati di esempio inseriti');
             
-            // Ora aggiungi alternative spots ai primi due spot
             if (insertedSpots.length >= 3) {
                 await Spot.findByIdAndUpdate(insertedSpots[0]._id, {
                     alternativeSpots: [insertedSpots[1]._id, insertedSpots[2]._id]
@@ -592,7 +570,6 @@ async function seedDatabase() {
             }
         }
        
-        // Crea directory uploads se non esiste
         const uploadsDir = path.join(__dirname, 'uploads');
         if (!fs.existsSync(uploadsDir)) {
             fs.mkdirSync(uploadsDir, { recursive: true });
@@ -607,28 +584,9 @@ async function seedDatabase() {
 async function startServer() {
     const PORT = process.env.PORT || 10000;
    
-    // Installa dipendenze mancanti
-    try {
-        const requiredModules = ['multer', 'sharp'];
-        console.log('📦 Verifica dipendenze...');
-       
-        for (const module of requiredModules) {
-            try {
-                require.resolve(module);
-                console.log(`✅ ${module} installato`);
-            } catch (e) {
-                console.log(`⚠️ ${module} non installato. Esegui: npm install ${module}`);
-            }
-        }
-    } catch (error) {
-        console.log('⚠️ Non è stato possibile verificare le dipendenze');
-    }
-   
-    // Prova a connetterti
     const connected = await connectToDatabase();
    
     if (connected) {
-        // Inserisci dati di esempio e crea cartelle
         await seedDatabase();
        
         app.listen(PORT, () => {
@@ -638,26 +596,16 @@ async function startServer() {
             console.log(`📸 Uploads: http://localhost:${PORT}/uploads/`);
             console.log(`🧪 Test DB: http://localhost:${PORT}/api/test`);
             console.log(`📊 Health: http://localhost:${PORT}/api/health`);
-            console.log('\n✨ VERSIONE 4.0.0 - MODIFICHE APPLICATE:');
-            console.log('• Fix: Tasto View ora funziona correttamente');
-            console.log('• Feature: Mappa con satellite Google');
-            console.log('• Rimozione: Planned Date rimosso');
-            console.log('• Rimozione: Stato "Exploring" rimosso (solo planned/completed)');
-            console.log('• Nuovo: Alternative Spots (selezione fino a 3 spot esistenti)');
-            console.log('• Miglioramento: API /api/spots-minimal per selezione alternative');
         });
     } else {
-        // Avvia senza database
         app.listen(PORT, () => {
             console.log(`\n⚠️  SERVER AVVIATO SENZA DATABASE`);
             console.log(`🌐 Frontend: http://localhost:${PORT}`);
             console.log(`❌ API database non disponibili`);
-            console.log(`💡 Controlla i logs sopra per diagnosticare il problema`);
         });
     }
 }
 
-// Gestione errori non catturati
 process.on('uncaughtException', (err) => {
     console.error('❌ Errore non gestito:', err);
 });
@@ -666,5 +614,4 @@ process.on('unhandledRejection', (reason, promise) => {
     console.error('❌ Promise non gestita:', reason);
 });
 
-// Avvia tutto
 startServer();
