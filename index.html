@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
     <style>
         :root {
             --bg-primary: #0a0a0a;
@@ -20,14 +21,14 @@
             --warning: #ffaa00;
             --danger: #ff4444;
         }
-       
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
             -webkit-tap-highlight-color: transparent;
         }
-       
+
         body {
             font-family: 'Inter', -apple-system, system-ui, sans-serif;
             background: var(--bg-primary);
@@ -37,14 +38,18 @@
             -webkit-text-size-adjust: 100%;
             overflow-x: hidden;
         }
-       
-        /* LAYOUT DESKTOP */
+
+        /* ✅ MOBILE CLICK/TAP FIX: rende i tap più affidabili */
+        button, a, .btn, .btn-small, .nav-item, .bottom-nav-item, .card {
+            touch-action: manipulation;
+        }
+
         .app {
             display: flex;
             min-height: 100vh;
             position: relative;
         }
-       
+
         .sidebar {
             width: 280px;
             background: var(--bg-secondary);
@@ -55,19 +60,19 @@
             height: 100vh;
             z-index: 100;
         }
-       
+
         .logo {
             padding: 1.5rem;
             border-bottom: 1px solid var(--border);
         }
-       
+
         .logo h1 {
             font-size: 1.5rem;
             font-weight: 700;
             color: var(--accent);
             letter-spacing: -0.5px;
         }
-       
+
         .logo p {
             font-size: 0.75rem;
             color: var(--text-dim);
@@ -75,12 +80,12 @@
             text-transform: uppercase;
             letter-spacing: 1px;
         }
-       
+
         .nav {
             padding: 1rem;
             flex: 1;
         }
-       
+
         .nav-item {
             display: flex;
             align-items: center;
@@ -94,49 +99,49 @@
             font-size: 0.9rem;
             font-weight: 500;
         }
-       
+
         .nav-item:hover {
             background: rgba(255, 255, 255, 0.05);
             color: var(--text);
         }
-       
+
         .nav-item.active {
             background: rgba(0, 255, 136, 0.1);
             color: var(--accent);
         }
-       
+
         .stats {
             padding: 1.5rem;
             border-top: 1px solid var(--border);
         }
-       
+
         .stat {
             display: flex;
             justify-content: space-between;
             align-items: center;
             padding: 0.75rem 0;
         }
-       
+
         .stat span:first-child {
             font-size: 0.8rem;
             color: var(--text-dim);
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
-       
+
         .stat-value {
             font-size: 1.5rem;
             font-weight: 700;
             color: var(--accent);
         }
-       
+
         .main {
             flex: 1;
             margin-left: 280px;
             display: flex;
             flex-direction: column;
         }
-       
+
         .header {
             padding: 1.5rem 2rem;
             border-bottom: 1px solid var(--border);
@@ -148,13 +153,13 @@
             top: 0;
             z-index: 50;
         }
-       
+
         .page-title {
             font-size: 1.5rem;
             font-weight: 700;
             letter-spacing: -0.5px;
         }
-       
+
         .btn {
             background: var(--accent);
             color: var(--bg-primary);
@@ -169,20 +174,19 @@
             align-items: center;
             gap: 0.5rem;
         }
-       
+
         .btn:hover {
             background: var(--accent-dim);
             transform: translateY(-1px);
         }
-       
+
         .content {
             flex: 1;
             padding: 2rem;
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
         }
-       
-        /* LAYOUT MOBILE */
+
         .mobile-header {
             display: none;
             padding: 1rem;
@@ -197,7 +201,7 @@
             height: 60px;
             z-index: 100;
         }
-       
+
         .mobile-header .logo {
             display: flex;
             align-items: center;
@@ -205,16 +209,15 @@
             padding: 0;
             border: none;
         }
-       
+
         .mobile-header .logo h1 {
             font-size: 1.2rem;
         }
-       
+
         .mobile-header .logo p {
             display: none;
         }
-       
-        /* Bottom Navigation */
+
         .bottom-nav {
             display: none;
             position: fixed;
@@ -227,13 +230,13 @@
             z-index: 100;
             height: 60px;
         }
-       
+
         .bottom-nav-items {
             display: flex;
             justify-content: space-around;
             width: 100%;
         }
-       
+
         .bottom-nav-item {
             display: flex;
             flex-direction: column;
@@ -248,23 +251,22 @@
             transition: all 0.2s;
             min-width: 60px;
         }
-       
+
         .bottom-nav-item i {
             font-size: 1.25rem;
             margin-bottom: 0.25rem;
         }
-       
+
         .bottom-nav-item.active {
             color: var(--accent);
             background: rgba(0, 255, 136, 0.1);
         }
-       
+
         .bottom-nav-item span {
             font-size: 0.7rem;
             font-weight: 500;
         }
-       
-        /* PAGINA MOBILE PER CREARE/MODIFICARE SPOT */
+
         .mobile-form-page {
             display: none;
             position: fixed;
@@ -277,7 +279,7 @@
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
         }
-       
+
         .mobile-form-header {
             padding: 1rem;
             background: var(--bg-secondary);
@@ -289,17 +291,17 @@
             top: 0;
             z-index: 10;
         }
-       
+
         .mobile-form-header h2 {
             font-size: 1.2rem;
             font-weight: 700;
         }
-       
+
         .mobile-form-content {
             padding: 1rem;
             padding-bottom: 5rem;
         }
-       
+
         .mobile-form-footer {
             position: fixed;
             bottom: 0;
@@ -312,20 +314,19 @@
             gap: 1rem;
             z-index: 10;
         }
-       
+
         .mobile-form-footer .btn {
             flex: 1;
             justify-content: center;
             padding: 1rem;
         }
-       
-        /* CARDS */
+
         .grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
             gap: 1.5rem;
         }
-       
+
         .card {
             background: var(--bg-card);
             border-radius: 12px;
@@ -334,12 +335,12 @@
             transition: all 0.2s;
             cursor: pointer;
         }
-       
+
         .card:hover {
             border-color: var(--accent);
             transform: translateY(-2px);
         }
-       
+
         .card-image-container {
             width: 100%;
             height: 180px;
@@ -347,18 +348,18 @@
             position: relative;
             background: var(--bg-primary);
         }
-       
+
         .card-image {
             width: 100%;
             height: 100%;
             object-fit: contain;
             background: var(--bg-primary);
         }
-       
+
         .card-content {
             padding: 1.25rem;
         }
-       
+
         .card-header {
             display: flex;
             justify-content: space-between;
@@ -366,14 +367,14 @@
             margin-bottom: 0.75rem;
             gap: 1rem;
         }
-       
+
         .card-title {
             font-size: 1.1rem;
             font-weight: 600;
             line-height: 1.3;
             flex: 1;
         }
-       
+
         .badge {
             padding: 0.25rem 0.75rem;
             border-radius: 20px;
@@ -383,30 +384,30 @@
             letter-spacing: 0.5px;
             white-space: nowrap;
         }
-       
+
         .badge-planned {
             background: rgba(255, 170, 0, 0.15);
             color: var(--warning);
         }
-       
+
         .badge-completed {
             background: rgba(0, 255, 136, 0.15);
             color: var(--accent);
         }
-       
+
         .card-location {
             font-size: 0.875rem;
             color: var(--text-dim);
             margin-bottom: 0.5rem;
         }
-       
+
         .card-coords {
             font-size: 0.75rem;
             color: var(--text-dim);
             font-family: 'Courier New', monospace;
             margin-bottom: 0.75rem;
         }
-       
+
         .card-description {
             font-size: 0.875rem;
             color: var(--text-dim);
@@ -417,7 +418,7 @@
             overflow: hidden;
             margin-bottom: 1rem;
         }
-       
+
         .card-footer {
             display: flex;
             justify-content: space-between;
@@ -425,12 +426,12 @@
             padding-top: 1rem;
             border-top: 1px solid var(--border);
         }
-       
+
         .card-date {
             font-size: 0.8rem;
             color: var(--text-dim);
         }
-       
+
         .btn-small {
             background: transparent;
             color: var(--accent);
@@ -442,13 +443,12 @@
             cursor: pointer;
             transition: all 0.2s;
         }
-       
+
         .btn-small:hover {
             background: var(--accent);
             color: var(--bg-primary);
         }
-       
-        /* MAP */
+
         .map-container {
             width: 100%;
             height: calc(100vh - 200px);
@@ -456,13 +456,12 @@
             overflow: hidden;
             border: 1px solid var(--border);
         }
-       
+
         #map {
             width: 100%;
             height: 100%;
         }
-       
-        /* MODAL PER DESKTOP */
+
         .modal-overlay {
             display: none;
             position: fixed;
@@ -476,7 +475,7 @@
             justify-content: center;
             padding: 1rem;
         }
-       
+
         .modal {
             background: var(--bg-secondary);
             border-radius: 12px;
@@ -486,7 +485,7 @@
             overflow: hidden;
             border: 1px solid var(--border);
         }
-       
+
         .modal-header {
             padding: 1.5rem 2rem;
             border-bottom: 1px solid var(--border);
@@ -494,12 +493,12 @@
             justify-content: space-between;
             align-items: center;
         }
-       
+
         .modal-header h2 {
             font-size: 1.5rem;
             font-weight: 700;
         }
-       
+
         .close-btn {
             background: transparent;
             border: none;
@@ -514,18 +513,18 @@
             border-radius: 8px;
             transition: all 0.2s;
         }
-       
+
         .close-btn:hover {
             background: rgba(255, 255, 255, 0.05);
             color: var(--text);
         }
-       
+
         .modal-body {
             padding: 2rem;
             overflow-y: auto;
             max-height: calc(90vh - 180px);
         }
-       
+
         .modal-footer {
             padding: 1.5rem 2rem;
             border-top: 1px solid var(--border);
@@ -533,30 +532,29 @@
             justify-content: flex-end;
             gap: 1rem;
         }
-       
-        /* FORM */
+
         .form-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             gap: 1.5rem;
         }
-       
+
         .form-group {
             display: flex;
             flex-direction: column;
             gap: 0.5rem;
         }
-       
+
         .form-group.full {
             grid-column: 1 / -1;
         }
-       
+
         .form-group label {
             font-size: 0.875rem;
             font-weight: 600;
             color: var(--text);
         }
-       
+
         .form-group input,
         .form-group select,
         .form-group textarea {
@@ -569,15 +567,14 @@
             font-family: inherit;
             transition: all 0.2s;
         }
-       
+
         .form-group input:focus,
         .form-group select:focus,
         .form-group textarea:focus {
             outline: none;
             border-color: var(--accent);
         }
-       
-        /* MULTI-SELECT PER ALTERNATIVE SPOTS */
+
         .alternative-spots-container {
             border: 1px solid var(--border);
             border-radius: 8px;
@@ -586,7 +583,7 @@
             max-height: 200px;
             overflow-y: auto;
         }
-       
+
         .alternative-spot-item {
             display: flex;
             align-items: center;
@@ -597,51 +594,50 @@
             cursor: pointer;
             transition: all 0.2s;
         }
-       
+
         .alternative-spot-item:hover {
             background: rgba(255, 255, 255, 0.1);
         }
-       
+
         .alternative-spot-item.selected {
             background: rgba(0, 255, 136, 0.15);
             border: 1px solid var(--accent);
         }
-       
+
         .alternative-spot-checkbox {
             margin-right: 0.75rem;
             width: 18px;
             height: 18px;
         }
-       
+
         .alternative-spot-name {
             flex: 1;
             font-size: 0.9rem;
         }
-       
+
         .alternative-spot-status {
             font-size: 0.7rem;
             padding: 0.25rem 0.5rem;
             border-radius: 12px;
             margin-left: 0.5rem;
         }
-       
+
         .alternative-spot-status.planned {
             background: rgba(255, 170, 0, 0.15);
             color: var(--warning);
         }
-       
+
         .alternative-spot-status.completed {
             background: rgba(0, 255, 136, 0.15);
             color: var(--accent);
         }
-       
+
         .alternative-spots-help {
             font-size: 0.75rem;
             color: var(--text-dim);
             margin-top: 0.5rem;
         }
-       
-        /* PHOTO UPLOAD SEMPLICE */
+
         .photo-upload-container {
             border: 2px dashed var(--border);
             border-radius: 8px;
@@ -650,29 +646,29 @@
             cursor: pointer;
             transition: all 0.2s;
         }
-       
+
         .photo-upload-container:hover {
             border-color: var(--accent);
         }
-       
+
         .photo-upload-icon {
             font-size: 3rem;
             color: var(--text-dim);
             margin-bottom: 1rem;
         }
-       
+
         .photo-upload-text {
             color: var(--text-dim);
             margin-bottom: 1rem;
         }
-       
+
         .photo-preview-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
             gap: 1rem;
             margin-top: 1.5rem;
         }
-       
+
         .photo-preview {
             position: relative;
             border-radius: 8px;
@@ -680,14 +676,14 @@
             aspect-ratio: 1;
             background: var(--bg-primary);
         }
-       
+
         .photo-preview img {
             width: 100%;
             height: 100%;
             object-fit: contain;
             background: var(--bg-primary);
         }
-       
+
         .remove-photo {
             position: absolute;
             top: 5px;
@@ -704,27 +700,17 @@
             cursor: pointer;
             font-size: 0.8rem;
         }
-       
+
         .remove-photo:hover {
             background: var(--danger);
         }
-       
-        /* COORDINATES INPUT */
+
         .coordinates-help {
             font-size: 0.75rem;
             color: var(--text-dim);
             margin-top: 0.25rem;
         }
-       
-        .coordinates-help a {
-            color: var(--accent);
-            text-decoration: none;
-        }
-       
-        .coordinates-help a:hover {
-            text-decoration: underline;
-        }
-       
+
         .btn-get-location {
             background: transparent;
             color: var(--accent);
@@ -738,53 +724,52 @@
             align-items: center;
             gap: 0.5rem;
         }
-       
+
         .btn-get-location:hover {
             background: rgba(0, 255, 136, 0.1);
         }
-       
-        /* DETAIL VIEW */
+
         .detail-container {
             max-width: 1000px;
             margin: 0 auto;
         }
-       
+
         .detail-header {
             text-align: center;
             margin-bottom: 2rem;
             padding-bottom: 2rem;
             border-bottom: 1px solid var(--border);
         }
-       
+
         .detail-title {
             font-size: 2rem;
             font-weight: 700;
             margin-bottom: 0.5rem;
         }
-       
+
         .detail-subtitle {
             font-size: 1rem;
             color: var(--text-dim);
         }
-       
+
         .detail-grid {
             display: grid;
             grid-template-columns: 2fr 1fr;
             gap: 2rem;
             margin-bottom: 2rem;
         }
-       
+
         .detail-section {
             margin-bottom: 2rem;
         }
-       
+
         .detail-section h3 {
             font-size: 1.1rem;
             font-weight: 600;
             margin-bottom: 1rem;
             color: var(--accent);
         }
-       
+
         .detail-text {
             background: var(--bg-card);
             padding: 1.5rem;
@@ -793,13 +778,13 @@
             line-height: 1.6;
             color: var(--text-dim);
         }
-       
+
         .gallery {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 0.75rem;
         }
-       
+
         .gallery-item {
             background: var(--bg-primary);
             border-radius: 8px;
@@ -807,19 +792,19 @@
             border: 1px solid var(--border);
             cursor: pointer;
         }
-       
+
         .gallery-item img {
             width: 100%;
             height: 120px;
             object-fit: contain;
             background: var(--bg-primary);
         }
-       
+
         .gallery-item:hover {
             border-color: var(--accent);
             transform: scale(1.05);
         }
-       
+
         .detail-map {
             height: 250px;
             border-radius: 8px;
@@ -827,34 +812,34 @@
             border: 1px solid var(--border);
             margin-bottom: 1rem;
         }
-       
+
         .info-grid {
             background: var(--bg-card);
             padding: 1.5rem;
             border-radius: 8px;
             border: 1px solid var(--border);
         }
-       
+
         .info-item {
             display: flex;
             justify-content: space-between;
             padding: 0.75rem 0;
             border-bottom: 1px solid var(--border);
         }
-       
+
         .info-item:last-child {
             border-bottom: none;
         }
-       
+
         .info-label {
             font-size: 0.875rem;
             color: var(--text-dim);
         }
-       
+
         .info-value {
             font-weight: 600;
         }
-       
+
         .plan-card {
             background: var(--bg-card);
             padding: 1.25rem;
@@ -862,27 +847,26 @@
             border: 1px solid var(--border);
             margin-bottom: 1rem;
         }
-       
+
         .plan-card h4 {
             font-size: 0.9rem;
             font-weight: 600;
             margin-bottom: 0.75rem;
             color: var(--accent);
         }
-       
+
         .plan-card p {
             font-size: 0.875rem;
             color: var(--text-dim);
             line-height: 1.5;
         }
-       
-        /* ALTERNATIVE SPOTS IN DETAIL VIEW */
+
         .alternative-spots-list {
             display: flex;
             flex-direction: column;
             gap: 0.5rem;
         }
-       
+
         .alternative-spot-link {
             display: flex;
             align-items: center;
@@ -894,67 +878,65 @@
             text-decoration: none;
             transition: all 0.2s;
         }
-       
+
         .alternative-spot-link:hover {
             border-color: var(--accent);
             background: rgba(0, 255, 136, 0.1);
             transform: translateX(5px);
         }
-       
+
         .alternative-spot-link i {
             margin-right: 0.75rem;
             color: var(--accent);
         }
-       
+
         .action-buttons {
             display: flex;
             gap: 1rem;
         }
-       
+
         .btn-secondary {
             background: transparent;
             color: var(--text);
             border: 1px solid var(--border);
         }
-       
+
         .btn-secondary:hover {
             background: rgba(255, 255, 255, 0.05);
         }
-       
+
         .btn-danger {
             background: transparent;
             color: var(--danger);
             border: 1px solid var(--danger);
         }
-       
+
         .btn-danger:hover {
             background: var(--danger);
             color: var(--text);
         }
-       
-        /* EMPTY STATE */
+
         .empty-state {
             text-align: center;
             padding: 4rem 2rem;
         }
-       
+
         .empty-state-icon {
             font-size: 4rem;
             margin-bottom: 1rem;
             opacity: 0.3;
         }
-       
+
         .empty-state h2 {
             font-size: 1.5rem;
             margin-bottom: 0.5rem;
         }
-       
+
         .empty-state p {
             color: var(--text-dim);
             margin-bottom: 1.5rem;
         }
-       
-        /* PHOTO VIEWER */
+
         .photo-viewer {
             display: none;
             position: fixed;
@@ -968,15 +950,14 @@
             justify-content: center;
             padding: 2rem;
         }
-       
+
         .photo-viewer img {
             max-width: 90%;
             max-height: 90%;
             object-fit: contain;
             border-radius: 8px;
         }
-       
-        /* LOADING */
+
         .loading {
             display: inline-block;
             width: 40px;
@@ -986,12 +967,11 @@
             border-top-color: var(--accent);
             animation: spin 1s linear infinite;
         }
-       
+
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
-       
-        /* MESSAGE */
+
         .message {
             position: fixed;
             top: 2rem;
@@ -1004,58 +984,28 @@
             z-index: 9999;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
         }
-       
+
         .message.success {
             border-color: var(--accent);
             color: var(--accent);
         }
-       
+
         .message.error {
             border-color: var(--danger);
             color: var(--danger);
         }
-       
-        /* SCROLLBAR */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-       
-        ::-webkit-scrollbar-track {
-            background: var(--bg-primary);
-        }
-       
-        ::-webkit-scrollbar-thumb {
-            background: var(--border);
-            border-radius: 4px;
-        }
-       
-        ::-webkit-scrollbar-thumb:hover {
-            background: #3a3a3a;
-        }
-       
-        /* MOBILE RESPONSIVE */
+
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-primary); }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #3a3a3a; }
+
         @media (max-width: 1024px) {
-            .sidebar {
-                display: none;
-            }
-           
-            .main {
-                margin-left: 0;
-                width: 100%;
-            }
-           
-            .header {
-                display: none;
-            }
-           
-            .mobile-header {
-                display: flex;
-            }
-           
-            .bottom-nav {
-                display: block;
-            }
-           
+            .sidebar { display: none; }
+            .main { margin-left: 0; width: 100%; }
+            .header { display: none; }
+            .mobile-header { display: flex; }
+            .bottom-nav { display: block; }
             .content {
                 padding: 1rem;
                 padding-top: 70px;
@@ -1064,7 +1014,6 @@
                 overflow-y: auto;
                 -webkit-overflow-scrolling: touch;
             }
-           
             .mobile-stats {
                 display: grid;
                 grid-template-columns: repeat(3, 1fr);
@@ -1075,18 +1024,13 @@
                 padding: 1rem;
                 border: 1px solid var(--border);
             }
-           
-            .mobile-stat {
-                text-align: center;
-            }
-           
+            .mobile-stat { text-align: center; }
             .mobile-stat-value {
                 font-size: 1.5rem;
                 font-weight: 700;
                 color: var(--accent);
                 display: block;
             }
-           
             .mobile-stat-label {
                 font-size: 0.7rem;
                 color: var(--text-dim);
@@ -1095,16 +1039,8 @@
                 display: block;
                 margin-top: 0.25rem;
             }
-           
-            .detail-grid {
-                grid-template-columns: 1fr;
-            }
-           
-            .grid {
-                grid-template-columns: 1fr;
-                gap: 1rem;
-            }
-           
+            .detail-grid { grid-template-columns: 1fr; }
+            .grid { grid-template-columns: 1fr; gap: 1rem; }
             .map-container {
                 height: calc(100vh - 140px);
                 border-radius: 0;
@@ -1112,139 +1048,60 @@
                 margin: -1rem;
                 width: calc(100% + 2rem);
             }
-           
-            .form-grid {
-                grid-template-columns: 1fr;
-                gap: 1rem;
-            }
-           
-            .modal-overlay {
-                display: none !important;
-            }
-           
-            .gallery {
-                grid-template-columns: repeat(2, 1fr);
-            }
-           
-            .gallery-item img {
-                height: 150px;
-            }
-           
-            .action-buttons {
-                flex-direction: column;
-            }
-           
-            .action-buttons .btn {
-                width: 100%;
-                justify-content: center;
-            }
-           
-            .card {
-                margin-bottom: 1rem;
-            }
-           
-            .btn {
+            .form-grid { grid-template-columns: 1fr; gap: 1rem; }
+            .modal-overlay { display: none !important; }
+            .gallery { grid-template-columns: repeat(2, 1fr); }
+            .gallery-item img { height: 150px; }
+            .action-buttons { flex-direction: column; }
+            .action-buttons .btn { width: 100%; justify-content: center; }
+            .card { margin-bottom: 1rem; }
+            .btn { padding: 1rem; font-size: 1rem; }
+            input, textarea, select { font-size: 16px; }
+            .form-group input, .form-group select, .form-group textarea {
                 padding: 1rem;
                 font-size: 1rem;
             }
-           
-            input, textarea, select {
-                font-size: 16px;
-            }
-           
-            .form-group input,
-            .form-group select,
-            .form-group textarea {
-                padding: 1rem;
-                font-size: 1rem;
-            }
-           
-            .photo-upload-container {
-                padding: 2rem 1rem;
-            }
-           
-            .photo-preview-grid {
-                grid-template-columns: repeat(3, 1fr);
-            }
-           
-            .alternative-spots-container {
-                max-height: 150px;
-            }
+            .photo-upload-container { padding: 2rem 1rem; }
+            .photo-preview-grid { grid-template-columns: repeat(3, 1fr); }
+            .alternative-spots-container { max-height: 150px; }
         }
-       
+
         @media (max-width: 480px) {
-            .gallery {
-                grid-template-columns: 1fr;
-            }
-           
-            .gallery-item img {
-                height: 200px;
-            }
-           
-            .detail-title {
-                font-size: 1.5rem;
-            }
-           
-            .mobile-header .logo h1 {
-                font-size: 1.1rem;
-            }
-           
-            .mobile-stat-value {
-                font-size: 1.2rem;
-            }
-           
-            .photo-preview-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-           
-            .mobile-form-content {
-                padding-bottom: 6rem;
-            }
-           
-            .mobile-form-footer {
-                flex-direction: column;
-            }
+            .gallery { grid-template-columns: 1fr; }
+            .gallery-item img { height: 200px; }
+            .detail-title { font-size: 1.5rem; }
+            .mobile-header .logo h1 { font-size: 1.1rem; }
+            .mobile-stat-value { font-size: 1.2rem; }
+            .photo-preview-grid { grid-template-columns: repeat(2, 1fr); }
+            .mobile-form-content { padding-bottom: 6rem; }
+            .mobile-form-footer { flex-direction: column; }
         }
-       
-        /* LEAFLET CUSTOM */
+
         .leaflet-popup-content-wrapper {
             background: var(--bg-secondary) !important;
             border: 1px solid var(--border) !important;
             border-radius: 8px !important;
             color: var(--text) !important;
         }
-       
-        .leaflet-popup-content {
-            margin: 1rem !important;
-        }
-       
-        .leaflet-popup-tip {
-            background: var(--bg-secondary) !important;
-        }
-       
-        /* TOUCH OPTIMIZATIONS */
-        .touch-optimized {
-            touch-action: manipulation;
-        }
-       
-        /* Safe area per iPhone X e superiori */
+        .leaflet-popup-content { margin: 1rem !important; }
+        .leaflet-popup-tip { background: var(--bg-secondary) !important; }
+
+        .touch-optimized { touch-action: manipulation; }
+
         @supports (padding: max(0px)) {
             .mobile-header {
                 padding-top: max(1rem, env(safe-area-inset-top));
                 padding-left: max(1rem, env(safe-area-inset-left));
                 padding-right: max(1rem, env(safe-area-inset-right));
             }
-           
             .bottom-nav {
                 padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
                 padding-left: max(1rem, env(safe-area-inset-left));
                 padding-right: max(1rem, env(safe-area-inset-right));
             }
-           
             .mobile-form-footer {
                 padding-bottom: max(1rem, env(safe-area-inset-bottom));
             }
-           
             .content {
                 padding-left: max(1rem, env(safe-area-inset-left));
                 padding-right: max(1rem, env(safe-area-inset-right));
@@ -1252,15 +1109,15 @@
         }
     </style>
 </head>
+
 <body>
-    <!-- LAYOUT DESKTOP -->
     <div class="app">
         <aside class="sidebar">
             <div class="logo">
                 <h1>URBEX Tracker</h1>
                 <p>Urban Exploration</p>
             </div>
-           
+
             <nav class="nav">
                 <div class="nav-item active" data-view="missions">
                     <span>📍</span>
@@ -1275,7 +1132,7 @@
                     <span>Archive</span>
                 </div>
             </nav>
-           
+
             <div class="stats">
                 <div class="stat">
                     <span>Total Spots</span>
@@ -1295,12 +1152,11 @@
         <main class="main">
             <div class="header">
                 <h1 class="page-title" id="page-title">Spot List</h1>
-                <button class="btn" id="add-mission-btn"><i class="fas fa-plus"></i> Add Spot</button>
+                <button class="btn" id="add-mission-btn" type="button"><i class="fas fa-plus"></i> Add Spot</button>
             </div>
 
             <div class="content">
                 <div id="missions-view">
-                    <!-- Stats mobile -->
                     <div class="mobile-stats" id="mobile-stats" style="display: none;">
                         <div class="mobile-stat">
                             <span class="mobile-stat-value" id="mobile-total-spots">0</span>
@@ -1315,7 +1171,7 @@
                             <span class="mobile-stat-label">Explored</span>
                         </div>
                     </div>
-                   
+
                     <div class="grid" id="missions-container">
                         <div class="empty-state" style="grid-column: 1 / -1;">
                             <div class="loading"></div>
@@ -1341,15 +1197,13 @@
         </main>
     </div>
 
-    <!-- HEADER MOBILE -->
     <div class="mobile-header">
         <div class="logo">
             <h1>URBEX Tracker</h1>
         </div>
-        <button class="btn" id="mobile-add-btn"><i class="fas fa-plus"></i> Add</button>
+        <button class="btn" id="mobile-add-btn" type="button"><i class="fas fa-plus"></i> Add</button>
     </div>
 
-    <!-- BOTTOM NAVIGATION MOBILE -->
     <nav class="bottom-nav">
         <div class="bottom-nav-items">
             <a href="#" class="bottom-nav-item active" data-view="missions">
@@ -1367,11 +1221,10 @@
         </div>
     </nav>
 
-    <!-- PAGINA MOBILE PER CREARE/MODIFICARE SPOT -->
     <div class="mobile-form-page" id="mobile-form-page">
         <div class="mobile-form-header">
             <h2 id="mobile-form-title">Add New Spot</h2>
-            <button class="close-btn" id="close-mobile-form">×</button>
+            <button class="close-btn" id="close-mobile-form" type="button">×</button>
         </div>
         <div class="mobile-form-content">
             <form id="mobile-mission-form">
@@ -1449,12 +1302,11 @@
         </div>
     </div>
 
-    <!-- MODAL PER DESKTOP -->
     <div class="modal-overlay" id="detail-modal">
         <div class="modal">
             <div class="modal-header">
                 <h2 id="detail-title">Spot Details</h2>
-                <button class="close-btn" id="close-detail">×</button>
+                <button class="close-btn" id="close-detail" type="button">×</button>
             </div>
             <div class="modal-body" id="detail-body"></div>
         </div>
@@ -1464,7 +1316,7 @@
         <div class="modal">
             <div class="modal-header">
                 <h2 id="modal-title">Add New Spot</h2>
-                <button class="close-btn" id="close-modal">×</button>
+                <button class="close-btn" id="close-modal" type="button">×</button>
             </div>
             <div class="modal-body">
                 <form id="mission-form">
@@ -1544,20 +1396,23 @@
     </div>
 
     <div class="photo-viewer" id="photo-viewer">
-        <button class="close-btn" id="close-viewer" style="position: absolute; top: 2rem; right: 2rem;">×</button>
+        <button class="close-btn" id="close-viewer" type="button" style="position: absolute; top: 2rem; right: 2rem;">×</button>
         <img id="viewer-image" src="" alt="">
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
     <script>
-        // ✅ CORREZIONE: URL API corretto
+        // ✅ API URL
         const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
             ? 'http://localhost:10000/api'
             : '/api';
-        
+
+        const ORIGIN = window.location.origin;
+
         console.log('🌐 API URL:', API_URL);
         console.log('📍 Current hostname:', window.location.hostname);
-       
+
         let map = null;
         let markers = [];
         let missions = [];
@@ -1566,13 +1421,21 @@
         let editingMissionId = null;
         let currentDetailMissionId = null;
         let uploadedPhotos = [];
-        let isMobile = window.innerWidth <= 1024;
+        let isMobile = window.matchMedia('(max-width: 1024px)').matches;
         let selectedAlternativeSpots = [];
-       
-        // Funzione per analizzare le coordinate
+
+        // ✅ Risolve URL foto: se è relativa (/uploads/...) la rende assoluta
+        function resolveUrl(url) {
+            if (!url) return url;
+            if (url.startsWith('http://') || url.startsWith('https://')) return url;
+            if (url.startsWith('//')) return window.location.protocol + url;
+            if (url.startsWith('/')) return ORIGIN + url;
+            return ORIGIN + '/' + url;
+        }
+
         function parseCoordinates(input) {
             input = input.trim();
-           
+
             if (input.includes('google.com/maps') || input.includes('maps.app.goo.gl')) {
                 try {
                     const url = new URL(input);
@@ -1583,46 +1446,47 @@
                             return { lat: coords[0], lng: coords[1] };
                         }
                     }
-                   
+
                     const match = input.match(/@(-?\d+\.?\d*),(-?\d+\.?\d*)/);
                     if (match) {
                         return { lat: parseFloat(match[1]), lng: parseFloat(match[2]) };
                     }
-                } catch (e) {
-                    // Continua con altri metodi
-                }
+                } catch (e) {}
             }
-           
+
             const parts = input.split(',');
             if (parts.length === 2) {
                 const lat = parseFloat(parts[0].trim());
                 const lng = parseFloat(parts[1].trim());
-                if (!isNaN(lat) && !isNaN(lng)) {
-                    return { lat, lng };
-                }
+                if (!isNaN(lat) && !isNaN(lng)) return { lat, lng };
             }
-           
+
             const parts2 = input.split(/[\s,;]+/);
             if (parts2.length >= 2) {
                 const lat = parseFloat(parts2[0]);
                 const lng = parseFloat(parts2[1]);
-                if (!isNaN(lat) && !isNaN(lng)) {
-                    return { lat, lng };
-                }
+                if (!isNaN(lat) && !isNaN(lng)) return { lat, lng };
             }
-           
+
             return null;
         }
-       
-        // Ottieni posizione corrente
+
+        function showMessage(message, type) {
+            const div = document.createElement('div');
+            div.className = `message ${type}`;
+            div.textContent = message;
+            document.body.appendChild(div);
+            setTimeout(() => div.remove(), 3000);
+        }
+
         function getCurrentLocation() {
             if (!navigator.geolocation) {
                 showMessage('Geolocation not supported', 'error');
                 return;
             }
-           
+
             showMessage('Getting your location...', 'success');
-           
+
             navigator.geolocation.getCurrentPosition(
                 (position) => {
                     const lat = position.coords.latitude;
@@ -1641,8 +1505,7 @@
                 { enableHighAccuracy: true, timeout: 10000 }
             );
         }
-       
-        // Carica tutti gli spot per la selezione
+
         async function loadSpotsForSelection() {
             try {
                 console.log('📋 Loading spots for selection...');
@@ -1657,187 +1520,173 @@
                 return [];
             }
         }
-       
-        // Aggiorna la UI per la selezione degli alternative spots
+
         function updateAlternativeSpotsUI(containerId, selectedIds = [], excludeId = null) {
             const container = document.getElementById(containerId);
             if (!container || allSpotsForSelection.length === 0) return;
-           
+
             const spotsToShow = allSpotsForSelection.filter(spot => spot._id !== excludeId);
-           
+
             container.innerHTML = '';
-           
+
             if (spotsToShow.length === 0) {
                 container.innerHTML = '<p style="text-align: center; color: var(--text-dim); padding: 2rem;">No other spots available</p>';
                 return;
             }
-           
+
             spotsToShow.forEach(spot => {
                 const isSelected = selectedIds.includes(spot._id);
                 const item = document.createElement('div');
                 item.className = `alternative-spot-item ${isSelected ? 'selected' : ''}`;
                 item.innerHTML = `
-                    <input type="checkbox" class="alternative-spot-checkbox" 
+                    <input type="checkbox" class="alternative-spot-checkbox"
                            ${isSelected ? 'checked' : ''}
-                           data-id="${spot._id}"
-                           onchange="toggleAlternativeSpot('${spot._id}', '${containerId}')">
+                           data-id="${spot._id}">
                     <span class="alternative-spot-name">${spot.name}</span>
                     <span class="alternative-spot-status ${spot.status}">${spot.status === 'planned' ? 'To Explore' : 'Explored'}</span>
                 `;
+
+                // ✅ toggle robusto: click su tutta la riga
+                item.addEventListener('pointerup', (e) => {
+                    const checkbox = item.querySelector('input[type="checkbox"]');
+                    if (e.target !== checkbox) checkbox.checked = !checkbox.checked;
+                    toggleAlternativeSpot(spot._id, containerId, checkbox.checked);
+                });
+
                 container.appendChild(item);
             });
         }
-       
-        // Funzione globale per toggle degli alternative spots
-        window.toggleAlternativeSpot = function(spotId, containerId) {
-            const checkbox = document.querySelector(`#${containerId} input[data-id="${spotId}"]`);
-            const isChecked = checkbox.checked;
-           
+
+        function toggleAlternativeSpot(spotId, containerId, isChecked) {
             if (isChecked) {
                 if (selectedAlternativeSpots.length >= 3) {
-                    checkbox.checked = false;
                     showMessage('Maximum 3 alternative spots allowed', 'error');
+                    // rimetto false
+                    const checkbox = document.querySelector(`#${containerId} input[data-id="${spotId}"]`);
+                    if (checkbox) checkbox.checked = false;
                     return;
                 }
-                selectedAlternativeSpots.push(spotId);
+                if (!selectedAlternativeSpots.includes(spotId)) selectedAlternativeSpots.push(spotId);
             } else {
                 selectedAlternativeSpots = selectedAlternativeSpots.filter(id => id !== spotId);
             }
-           
+
             if (isMobile) {
                 document.getElementById('mobile-alternative-spots-input').value = JSON.stringify(selectedAlternativeSpots);
             } else {
                 document.getElementById('alternative-spots-input').value = JSON.stringify(selectedAlternativeSpots);
             }
-           
-            const item = checkbox.closest('.alternative-spot-item');
-            if (item) {
-                item.classList.toggle('selected', isChecked);
-            }
-        };
-       
-        // Gestione upload foto
+
+            const checkbox = document.querySelector(`#${containerId} input[data-id="${spotId}"]`);
+            const item = checkbox?.closest('.alternative-spot-item');
+            if (item) item.classList.toggle('selected', isChecked);
+        }
+
+        // ✅ Preview foto globale (riutilizzabile anche in edit)
+        function renderPhotoPreview(previewContainer) {
+            if (!previewContainer) return;
+            previewContainer.innerHTML = '';
+
+            uploadedPhotos.forEach((photo, index) => {
+                const preview = document.createElement('div');
+                preview.className = 'photo-preview';
+                preview.innerHTML = `
+                    <img src="${resolveUrl(photo.dataUrl)}" alt="Preview ${index + 1}">
+                    <button type="button" class="remove-photo" data-index="${index}">×</button>
+                `;
+                previewContainer.appendChild(preview);
+            });
+
+            previewContainer.querySelectorAll('.remove-photo').forEach(btn => {
+                btn.addEventListener('pointerup', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const index = parseInt(btn.getAttribute('data-index'), 10);
+                    uploadedPhotos.splice(index, 1);
+                    renderPhotoPreview(previewContainer);
+                });
+            });
+        }
+
         function setupPhotoUpload() {
-            const dropArea = document.getElementById('photo-drop-area');
             const fileInput = document.getElementById('photo-input');
             const previewContainer = document.getElementById('photo-preview');
             const browseBtn = document.getElementById('browse-photos');
-           
-            if (browseBtn) {
-                browseBtn.addEventListener('click', () => fileInput.click());
-            }
-           
-            if (fileInput) {
-                fileInput.addEventListener('change', handleFiles);
-            }
-           
+
+            if (browseBtn) browseBtn.addEventListener('pointerup', () => fileInput.click());
+            if (fileInput) fileInput.addEventListener('change', (e) => handleFiles(e, previewContainer));
+
             const mobileDropArea = document.getElementById('mobile-photo-drop-area');
             const mobileFileInput = document.getElementById('mobile-photo-input');
             const mobilePreviewContainer = document.getElementById('mobile-photo-preview');
-           
-            if (mobileDropArea) {
-                mobileDropArea.addEventListener('click', () => mobileFileInput.click());
-            }
-           
-            if (mobileFileInput) {
-                mobileFileInput.addEventListener('change', handleMobileFiles);
-            }
-           
-            function handleFiles(e) {
-                const files = Array.from(e.target.files);
-                processFiles(files, previewContainer);
-                fileInput.value = '';
-            }
-           
-            function handleMobileFiles(e) {
-                const files = Array.from(e.target.files);
-                processFiles(files, mobilePreviewContainer);
-                mobileFileInput.value = '';
-            }
-           
-            function processFiles(files, previewContainer) {
-                if (files.length > 5) {
-                    showMessage('Maximum 5 photos allowed', 'error');
+
+            if (mobileDropArea) mobileDropArea.addEventListener('pointerup', () => mobileFileInput.click());
+            if (mobileFileInput) mobileFileInput.addEventListener('change', (e) => handleFiles(e, mobilePreviewContainer));
+
+            function handleFiles(e, targetPreview) {
+                const files = Array.from(e.target.files || []);
+                if (uploadedPhotos.length + files.length > 5) {
+                    showMessage('Maximum 5 photos allowed (total)', 'error');
+                    e.target.value = '';
                     return;
                 }
-               
+
                 files.forEach(file => {
                     if (!file.type.match('image.*')) {
                         showMessage('Only image files are allowed', 'error');
                         return;
                     }
-                   
+
                     const reader = new FileReader();
-                    reader.onload = function(e) {
+                    reader.onload = function(ev) {
                         const photoData = {
                             id: Date.now() + Math.random(),
-                            dataUrl: e.target.result,
+                            dataUrl: ev.target.result,
                             file: file
                         };
-                       
                         uploadedPhotos.push(photoData);
-                        updatePhotoPreview(previewContainer);
+                        renderPhotoPreview(targetPreview);
                     };
                     reader.readAsDataURL(file);
                 });
+
+                e.target.value = '';
             }
-           
-            function updatePhotoPreview(previewContainer) {
-                previewContainer.innerHTML = '';
-               
-                uploadedPhotos.forEach((photo, index) => {
-                    const preview = document.createElement('div');
-                    preview.className = 'photo-preview';
-                    preview.innerHTML = `
-                        <img src="${photo.dataUrl}" alt="Preview ${index + 1}">
-                        <button type="button" class="remove-photo" data-index="${index}">×</button>
-                    `;
-                    previewContainer.appendChild(preview);
-                });
-               
-                previewContainer.querySelectorAll('.remove-photo').forEach(btn => {
-                    btn.addEventListener('click', function() {
-                        const index = parseInt(this.getAttribute('data-index'));
-                        uploadedPhotos.splice(index, 1);
-                        updatePhotoPreview(previewContainer);
-                    });
-                });
-            }
-           
-            document.getElementById('close-modal')?.addEventListener('click', () => {
+
+            // pulizia
+            document.getElementById('close-modal')?.addEventListener('pointerup', () => {
                 uploadedPhotos = [];
-                updatePhotoPreview(previewContainer);
+                renderPhotoPreview(previewContainer);
             });
-           
-            document.getElementById('cancel-btn')?.addEventListener('click', () => {
+
+            document.getElementById('cancel-btn')?.addEventListener('pointerup', () => {
                 uploadedPhotos = [];
-                updatePhotoPreview(previewContainer);
+                renderPhotoPreview(previewContainer);
             });
-           
-            document.getElementById('close-mobile-form')?.addEventListener('click', () => {
+
+            document.getElementById('close-mobile-form')?.addEventListener('pointerup', () => {
                 uploadedPhotos = [];
-                updatePhotoPreview(mobilePreviewContainer);
+                renderPhotoPreview(mobilePreviewContainer);
             });
-           
-            document.getElementById('mobile-cancel-btn')?.addEventListener('click', () => {
+
+            document.getElementById('mobile-cancel-btn')?.addEventListener('pointerup', () => {
                 uploadedPhotos = [];
-                updatePhotoPreview(mobilePreviewContainer);
+                renderPhotoPreview(mobilePreviewContainer);
             });
         }
-       
+
         async function fetchSpots() {
             try {
                 console.log('🔄 Fetching spots from API...');
                 const response = await fetch(`${API_URL}/spots`);
                 console.log('📡 Response status:', response.status);
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                
+
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
                 const data = await response.json();
                 console.log(`✅ Found ${data.length} spots`);
                 missions = data;
+
                 renderMissions();
                 updateStats();
                 updateMap();
@@ -1851,65 +1700,68 @@
                         <h2>Connection Error</h2>
                         <p>Cannot connect to server. Make sure backend is running.</p>
                         <p style="font-size: 0.8rem; margin-top: 0.5rem; color: var(--danger);">Error: ${error.message}</p>
-                        <button class="btn" onclick="fetchSpots()" style="margin-top: 1rem;">Retry</button>
+                        <button class="btn" type="button" id="retry-btn" style="margin-top: 1rem;">Retry</button>
                     </div>
                 `;
+                document.getElementById('retry-btn')?.addEventListener('pointerup', fetchSpots);
                 return [];
             }
         }
-       
+
         async function uploadPhotos() {
-            if (uploadedPhotos.length === 0) {
-                return [];
-            }
-           
+            if (uploadedPhotos.length === 0) return [];
+
             try {
                 const formData = new FormData();
                 uploadedPhotos.forEach(photo => {
-                    if (photo.file) {
-                        formData.append('photos', photo.file);
-                    }
+                    if (photo.file) formData.append('photos', photo.file);
                 });
-               
+
                 const response = await fetch(`${API_URL}/upload`, {
                     method: 'POST',
                     body: formData
                 });
-               
+
                 if (!response.ok) throw new Error('Photo upload failed');
                 const data = await response.json();
-                return data.urls || [];
+
+                // ✅ adesso il backend restituisce path relativi (/uploads/...)
+                return (data.urls || []).map(u => resolveUrl(u));
             } catch (error) {
                 console.error('Error uploading photos:', error);
-                return uploadedPhotos.map(photo => photo.dataUrl);
+                return uploadedPhotos.map(photo => resolveUrl(photo.dataUrl));
             }
         }
-       
+
         async function saveSpot(spotData) {
             try {
                 if (uploadedPhotos.length > 0) {
                     const photoUrls = await uploadPhotos();
-                    spotData.photos = photoUrls;
+                    spotData.photos = photoUrls.map(u => {
+                        // salvo RELATIVO se possibile (se è origin+ /uploads)
+                        if (u.startsWith(ORIGIN + '/uploads/')) return u.replace(ORIGIN, '');
+                        return u;
+                    });
                 }
-               
+
                 if (selectedAlternativeSpots.length > 0) {
                     spotData.alternativeSpots = selectedAlternativeSpots;
                 }
-               
+
                 const url = editingMissionId
                     ? `${API_URL}/spots/${editingMissionId}`
                     : `${API_URL}/spots`;
-               
+
                 const method = editingMissionId ? 'PUT' : 'POST';
-               
+
                 const response = await fetch(url, {
                     method: method,
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(spotData)
                 });
-               
+
                 if (!response.ok) throw new Error('Save failed');
-               
+
                 showMessage('Spot saved successfully!', 'success');
                 await fetchSpots();
                 return await response.json();
@@ -1919,46 +1771,33 @@
                 throw error;
             }
         }
-       
+
         async function deleteSpot(id) {
             if (!confirm('Delete this spot?')) return;
-           
+
             try {
-                const response = await fetch(`${API_URL}/spots/${id}`, {
-                    method: 'DELETE'
-                });
-               
+                const response = await fetch(`${API_URL}/spots/${id}`, { method: 'DELETE' });
                 if (!response.ok) throw new Error('Delete failed');
-               
+
                 showMessage('Spot deleted!', 'success');
                 await fetchSpots();
-               
-                if (currentDetailMissionId === id) {
-                    closeDetailModal();
-                }
+
+                if (currentDetailMissionId === id) closeDetailModal();
             } catch (error) {
                 console.error('Error deleting spot:', error);
                 showMessage('Error deleting spot', 'error');
             }
         }
-       
-        function showMessage(message, type) {
-            const div = document.createElement('div');
-            div.className = `message ${type}`;
-            div.textContent = message;
-            document.body.appendChild(div);
-            setTimeout(() => div.remove(), 3000);
-        }
-       
+
         function updateStats() {
             const total = missions.length;
             const planned = missions.filter(m => m.status === 'planned').length;
             const explored = missions.filter(m => m.status === 'completed').length;
-           
+
             document.getElementById('total-spots').textContent = total;
             document.getElementById('planned-spots').textContent = planned;
             document.getElementById('explored-spots').textContent = explored;
-           
+
             if (isMobile) {
                 document.getElementById('mobile-total-spots').textContent = total;
                 document.getElementById('mobile-planned-spots').textContent = planned;
@@ -1966,25 +1805,24 @@
                 document.getElementById('mobile-stats').style.display = currentView === 'missions' ? 'grid' : 'none';
             }
         }
-       
+
         function initMap() {
             if (map) return;
             map = L.map('map').setView([45.4642, 9.1900], 6);
-           
-            // Google Satellite tile layer
+
             L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
                 attribution: '© Google Maps',
                 maxZoom: 20
             }).addTo(map);
-           
+
             updateMap();
         }
-       
+
         function updateMap() {
             if (!map) return;
             markers.forEach(m => map.removeLayer(m));
             markers = [];
-           
+
             missions.forEach(mission => {
                 if (mission.lat && mission.lng) {
                     let iconColor = 'blue';
@@ -1992,13 +1830,13 @@
                         case 'planned': iconColor = 'orange'; break;
                         case 'completed': iconColor = 'green'; break;
                     }
-                   
+
                     const customIcon = L.divIcon({
                         html: `<div style="background-color: ${iconColor}; width: 24px; height: 24px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 10px rgba(0,0,0,0.5);"></div>`,
                         className: 'custom-marker',
                         iconSize: [30, 30]
                     });
-                   
+
                     const marker = L.marker([mission.lat, mission.lng], { icon: customIcon })
                         .addTo(map)
                         .bindPopup(`
@@ -2006,22 +1844,31 @@
                                 <h3 style="margin: 0 0 8px 0; font-size: 1rem; color: var(--accent);">${mission.name}</h3>
                                 <p style="margin: 4px 0; font-size: 0.875rem;">📍 ${mission.location}</p>
                                 <p style="margin: 4px 0; font-size: 0.875rem; color: #888;">${mission.status === 'planned' ? 'To Explore' : 'Explored'}</p>
-                                <button onclick="showMissionDetail('${mission._id}')" class="btn" style="width: 100%; margin-top: 8px; padding: 8px; font-size: 0.875rem;">View Details</button>
+                                <button data-id="${mission._id}" class="btn open-detail-btn" style="width: 100%; margin-top: 8px; padding: 8px; font-size: 0.875rem;">View Details</button>
                             </div>
                         `);
+
                     markers.push(marker);
                 }
             });
-           
+
+            // ✅ popup button click robusto
+            map?.on('popupopen', (e) => {
+                const btn = e.popup.getElement()?.querySelector('.open-detail-btn');
+                if (btn) {
+                    btn.addEventListener('pointerup', () => showMissionDetail(btn.dataset.id));
+                }
+            });
+
             if (markers.length > 0) {
                 const group = L.featureGroup(markers);
                 map.fitBounds(group.getBounds().pad(0.1));
             }
         }
-       
+
         function switchView(view) {
             currentView = view;
-           
+
             if (!isMobile) {
                 document.querySelectorAll('.nav-item').forEach(item => {
                     item.classList.toggle('active', item.dataset.view === view);
@@ -2030,19 +1877,18 @@
                 document.querySelectorAll('.bottom-nav-item').forEach(item => {
                     item.classList.toggle('active', item.dataset.view === view);
                 });
-               
                 document.getElementById('mobile-stats').style.display = view === 'missions' ? 'grid' : 'none';
             }
-           
+
             ['missions', 'map', 'archive'].forEach(v => {
                 document.getElementById(`${v}-view`).style.display = v === view ? 'block' : 'none';
             });
-           
+
             const title = view === 'missions' ? 'Spot List' :
                          view === 'map' ? 'Map View' : 'Archive';
-           
+
             document.getElementById('page-title').textContent = title;
-           
+
             if (view === 'map') {
                 setTimeout(() => {
                     if (map) {
@@ -2052,69 +1898,75 @@
                 }, 100);
             }
         }
-       
-        // ✅ CORREZIONE CRITICA: Funzione per gestire il click sulle card
+
+        // ✅ click/tap robusto su card: usa data-id, non il name
         function setupCardClickEvents() {
-            // Rimuovi event listener precedenti
             const container = document.getElementById('missions-container');
-            container.removeEventListener('click', handleCardClick);
-            
-            // Aggiungi nuovo event listener
-            container.addEventListener('click', handleCardClick);
-        }
-       
-        function handleCardClick(e) {
-            // Trova il bottone View o la card cliccata
-            let target = e.target;
-            
-            // Se non è il bottone View, cerca il bottone View nei genitori
-            if (!target.classList.contains('btn-small')) {
-                target = target.closest('.btn-small');
-            }
-            
-            if (target && target.textContent === 'View') {
-                const card = target.closest('.card');
-                const cardTitle = card.querySelector('.card-title');
-                const missionName = cardTitle.textContent;
-                
-                // Trova la missione corrispondente
-                const mission = missions.find(m => m.name === missionName);
-                if (mission) {
-                    showMissionDetail(mission._id);
+            if (!container) return;
+
+            container.replaceWith(container.cloneNode(true));
+            // riprendo nuovo riferimento dopo clone
+            const newContainer = document.getElementById('missions-container');
+
+            const handler = (e) => {
+                const btn = e.target.closest('.view-btn');
+                const card = e.target.closest('.card');
+
+                // se clicchi su View
+                if (btn) {
+                    const id = btn.dataset.id;
+                    if (id) showMissionDetail(id);
+                    return;
                 }
-            }
+
+                // se clicchi sulla card (non su altri bottoni)
+                if (card) {
+                    const id = card.dataset.id;
+                    if (id) showMissionDetail(id);
+                }
+            };
+
+            newContainer.addEventListener('pointerup', handler);
+            newContainer.addEventListener('click', handler);
         }
-       
+
         function renderMissions() {
             const container = document.getElementById('missions-container');
-           
+
             if (missions.length === 0) {
                 container.innerHTML = `
                     <div class="empty-state" style="grid-column: 1 / -1;">
                         <div class="empty-state-icon">📍</div>
                         <h2>No Spots Yet</h2>
                         <p>Add your first urbex spot to get started</p>
-                        <button class="btn" onclick="${isMobile ? 'showMobileAddForm()' : 'showAddMissionModal()'}">Add First Spot</button>
+                        <button class="btn" type="button" id="add-first-btn">Add First Spot</button>
                     </div>
                 `;
+
+                document.getElementById('add-first-btn')?.addEventListener('pointerup', () => {
+                    if (isMobile) showMobileAddForm();
+                    else showAddMissionModal();
+                });
+
                 return;
             }
-           
+
             container.innerHTML = '';
             missions.forEach(mission => {
                 const card = document.createElement('div');
                 card.className = 'card touch-optimized';
-               
+                card.dataset.id = mission._id; // ✅ fondamentale
+
                 let statusText = '', statusClass = '';
                 switch(mission.status) {
                     case 'planned': statusText = 'To Explore'; statusClass = 'badge-planned'; break;
                     case 'completed': statusText = 'Explored'; statusClass = 'badge-completed'; break;
                 }
-               
-                const mainPhoto = mission.photos && mission.photos.length > 0
-                    ? mission.photos[0]
+
+                const mainPhoto = (mission.photos && mission.photos.length > 0)
+                    ? resolveUrl(mission.photos[0])
                     : 'https://images.unsplash.com/photo-1519681393784-d120267933ba?w=800&q=80';
-               
+
                 card.innerHTML = `
                     <div class="card-image-container">
                         <img src="${mainPhoto}" alt="${mission.name}" class="card-image">
@@ -2131,19 +1983,16 @@
                         <p class="card-description">${mission.description}</p>
                         <div class="card-footer">
                             <div class="card-date">${statusText === 'Explored' ? '✅' : '📌'}</div>
-                            <button class="btn-small view-btn">View</button>
+                            <button class="btn-small view-btn" type="button" data-id="${mission._id}">View</button>
                         </div>
                     </div>
                 `;
                 container.appendChild(card);
             });
-            
-            // ✅ IMPORTANTE: Setup degli event listener dopo aver renderizzato
-            setTimeout(() => {
-                setupCardClickEvents();
-            }, 100);
+
+            setupCardClickEvents();
         }
-       
+
         async function showMissionDetail(id) {
             console.log('🔍 Showing mission detail for ID:', id);
             const mission = missions.find(m => m._id === id);
@@ -2151,30 +2000,28 @@
                 console.error('❌ Mission not found for ID:', id);
                 return;
             }
-           
+
             currentDetailMissionId = id;
-           
+
             let statusText = '';
             switch(mission.status) {
                 case 'planned': statusText = 'To Explore'; break;
                 case 'completed': statusText = 'Explored'; break;
             }
-           
+
             document.getElementById('detail-title').textContent = mission.name;
-           
+
             let alternativeSpotsHTML = '';
             if (mission.alternativeSpots && mission.alternativeSpots.length > 0) {
-                const alternativeSpots = missions.filter(m => 
-                    mission.alternativeSpots.includes(m._id)
-                );
-               
+                const alternativeSpots = missions.filter(m => mission.alternativeSpots.includes(m._id));
+
                 if (alternativeSpots.length > 0) {
                     alternativeSpotsHTML = `
                         <div class="detail-section">
                             <h3><i class="fas fa-exchange-alt"></i> Alternative Spots</h3>
                             <div class="alternative-spots-list">
                                 ${alternativeSpots.map(spot => `
-                                    <a href="#" class="alternative-spot-link" onclick="showMissionDetail('${spot._id}'); return false;">
+                                    <a href="#" class="alternative-spot-link" data-id="${spot._id}">
                                         <i class="fas fa-map-marker-alt"></i>
                                         <div style="flex: 1;">
                                             <div style="font-weight: 600;">${spot.name}</div>
@@ -2190,21 +2037,23 @@
                     `;
                 }
             }
-           
+
+            const photos = (mission.photos || []).map(p => resolveUrl(p));
+
             document.getElementById('detail-body').innerHTML = `
                 <div class="detail-container">
                     <div class="detail-header">
                         <h1 class="detail-title">${mission.name}</h1>
                         <div class="detail-subtitle">📍 ${mission.location}</div>
                     </div>
-                   
+
                     <div class="detail-grid">
                         <div>
                             <div class="detail-section">
                                 <h3>Description</h3>
                                 <div class="detail-text">${mission.description}</div>
                             </div>
-                           
+
                             ${mission.planA ? `
                             <div class="detail-section">
                                 <h3>Main Access</h3>
@@ -2213,23 +2062,23 @@
                                 </div>
                             </div>
                             ` : ''}
-                           
+
                             ${alternativeSpotsHTML}
-                           
-                            ${mission.photos && mission.photos.length > 0 ? `
+
+                            ${photos.length > 0 ? `
                             <div class="detail-section">
                                 <h3>Photos</h3>
                                 <div class="gallery">
-                                    ${mission.photos.map((photo, i) => `
+                                    ${photos.map((photo, i) => `
                                         <div class="gallery-item">
-                                            <img src="${photo}" alt="Photo ${i + 1}" onclick="viewPhoto('${photo}')">
+                                            <img src="${photo}" alt="Photo ${i + 1}" data-photo="${photo}">
                                         </div>
                                     `).join('')}
                                 </div>
                             </div>
                             ` : ''}
                         </div>
-                       
+
                         <div>
                             ${mission.lat && mission.lng ? `
                             <div class="detail-section">
@@ -2238,12 +2087,12 @@
                                 <p style="margin-top: 0.5rem; font-size: 0.75rem; color: var(--text-dim); text-align: center; font-family: monospace;">
                                     ${mission.lat.toFixed(6)}, ${mission.lng.toFixed(6)}
                                 </p>
-                                <button class="btn" style="width: 100%; margin-top: 1rem;" onclick="openInGoogleMaps(${mission.lat}, ${mission.lng})">
+                                <button class="btn" type="button" style="width: 100%; margin-top: 1rem;" id="open-maps-btn">
                                     <i class="fas fa-external-link-alt"></i> Open in Maps
                                 </button>
                             </div>
                             ` : ''}
-                           
+
                             <div class="detail-section">
                                 <h3>Info</h3>
                                 <div class="info-grid">
@@ -2265,14 +2114,33 @@
                             </div>
                         </div>
                     </div>
-                   
+
                     <div class="action-buttons">
-                        <button class="btn" onclick="editMission('${mission._id}')"><i class="fas fa-edit"></i> Edit</button>
-                        <button class="btn btn-danger" onclick="deleteSpot('${mission._id}')"><i class="fas fa-trash"></i> Delete</button>
+                        <button class="btn" type="button" id="edit-btn"><i class="fas fa-edit"></i> Edit</button>
+                        <button class="btn btn-danger" type="button" id="delete-btn"><i class="fas fa-trash"></i> Delete</button>
                     </div>
                 </div>
             `;
-           
+
+            // listeners detail
+            document.querySelectorAll('.alternative-spot-link').forEach(a => {
+                a.addEventListener('pointerup', (e) => {
+                    e.preventDefault();
+                    showMissionDetail(a.dataset.id);
+                });
+            });
+
+            document.querySelectorAll('.gallery-item img').forEach(img => {
+                img.addEventListener('pointerup', () => viewPhoto(img.dataset.photo));
+            });
+
+            document.getElementById('edit-btn')?.addEventListener('pointerup', () => editMission(mission._id));
+            document.getElementById('delete-btn')?.addEventListener('pointerup', () => deleteSpot(mission._id));
+
+            document.getElementById('open-maps-btn')?.addEventListener('pointerup', () => {
+                openInGoogleMaps(mission.lat, mission.lng);
+            });
+
             if (mission.lat && mission.lng) {
                 setTimeout(() => {
                     const detailMap = L.map('detail-map').setView([mission.lat, mission.lng], 15);
@@ -2280,34 +2148,40 @@
                         attribution: '© Google Maps',
                         maxZoom: 20
                     }).addTo(detailMap);
-                   
+
                     const marker = L.marker([mission.lat, mission.lng]).addTo(detailMap);
                     detailMap.fitBounds(marker.getBounds());
                 }, 100);
             }
-           
+
             document.getElementById('detail-modal').style.display = 'flex';
         }
-       
-        window.openInGoogleMaps = function(lat, lng) {
+
+        function openInGoogleMaps(lat, lng) {
             window.open(`https://www.google.com/maps?q=${lat},${lng}`, '_blank');
-        };
-       
-        window.viewPhoto = function(url) {
-            document.getElementById('viewer-image').src = url;
+        }
+
+        function viewPhoto(url) {
+            document.getElementById('viewer-image').src = resolveUrl(url);
             document.getElementById('photo-viewer').style.display = 'flex';
-        };
-       
+        }
+
         async function editMission(id) {
             const mission = missions.find(m => m._id === id);
             if (!mission) return;
-           
+
             editingMissionId = id;
-            uploadedPhotos = [];
             selectedAlternativeSpots = mission.alternativeSpots || [];
-           
+
             await loadSpotsForSelection();
-           
+
+            // ✅ carico foto già presenti come “uploadedPhotos” (senza file)
+            uploadedPhotos = (mission.photos || []).map((url, index) => ({
+                id: index,
+                dataUrl: resolveUrl(url),
+                file: null
+            }));
+
             if (isMobile) {
                 document.getElementById('mobile-form-title').textContent = 'Edit Spot';
                 document.getElementById('mobile-mission-name').value = mission.name;
@@ -2317,18 +2191,10 @@
                 document.getElementById('mobile-mission-desc').value = mission.description;
                 document.getElementById('mobile-mission-plan-a').value = mission.planA || '';
                 document.getElementById('mobile-alternative-spots-input').value = JSON.stringify(selectedAlternativeSpots);
-               
+
                 updateAlternativeSpotsUI('mobile-alternative-spots-container', selectedAlternativeSpots, id);
-               
-                if (mission.photos && mission.photos.length > 0) {
-                    uploadedPhotos = mission.photos.map((url, index) => ({
-                        id: index,
-                        dataUrl: url,
-                        file: null
-                    }));
-                    updatePhotoPreview(document.getElementById('mobile-photo-preview'));
-                }
-               
+                renderPhotoPreview(document.getElementById('mobile-photo-preview'));
+
                 closeDetailModal();
                 showMobileForm();
             } else {
@@ -2340,110 +2206,96 @@
                 document.getElementById('mission-desc').value = mission.description;
                 document.getElementById('mission-plan-a').value = mission.planA || '';
                 document.getElementById('alternative-spots-input').value = JSON.stringify(selectedAlternativeSpots);
-               
+
                 updateAlternativeSpotsUI('alternative-spots-container', selectedAlternativeSpots, id);
-               
-                if (mission.photos && mission.photos.length > 0) {
-                    uploadedPhotos = mission.photos.map((url, index) => ({
-                        id: index,
-                        dataUrl: url,
-                        file: null
-                    }));
-                    updatePhotoPreview(document.getElementById('photo-preview'));
-                }
-               
+                renderPhotoPreview(document.getElementById('photo-preview'));
+
                 closeDetailModal();
                 document.getElementById('mission-modal').style.display = 'flex';
             }
         }
-       
+
         async function showAddMissionModal() {
             editingMissionId = null;
             uploadedPhotos = [];
             selectedAlternativeSpots = [];
-           
+
             await loadSpotsForSelection();
-           
+
             document.getElementById('modal-title').textContent = 'Add New Spot';
             document.getElementById('mission-form').reset();
             document.getElementById('alternative-spots-input').value = '';
-           
+
             updateAlternativeSpotsUI('alternative-spots-container', []);
-           
+            renderPhotoPreview(document.getElementById('photo-preview'));
+
             document.getElementById('mission-modal').style.display = 'flex';
         }
-       
+
         async function showMobileAddForm() {
             editingMissionId = null;
             uploadedPhotos = [];
             selectedAlternativeSpots = [];
-           
+
             await loadSpotsForSelection();
-           
+
             document.getElementById('mobile-form-title').textContent = 'Add New Spot';
             document.getElementById('mobile-mission-form').reset();
             document.getElementById('mobile-alternative-spots-input').value = '';
-           
+
             updateAlternativeSpotsUI('mobile-alternative-spots-container', []);
-           
+            renderPhotoPreview(document.getElementById('mobile-photo-preview'));
+
             showMobileForm();
         }
-       
+
         function showMobileForm() {
             document.getElementById('mobile-form-page').style.display = 'block';
             document.body.style.overflow = 'hidden';
-           
-            setTimeout(() => {
-                document.getElementById('mobile-mission-name').focus();
-            }, 100);
+            setTimeout(() => document.getElementById('mobile-mission-name').focus(), 100);
         }
-       
+
         function hideMobileForm() {
             document.getElementById('mobile-form-page').style.display = 'none';
             document.body.style.overflow = 'auto';
             uploadedPhotos = [];
             selectedAlternativeSpots = [];
         }
-       
+
         function closeDetailModal() {
             document.getElementById('detail-modal').style.display = 'none';
         }
-       
+
         function setupMobileLayout() {
             if (!isMobile) return;
-           
+
             document.getElementById('mobile-stats').style.display = currentView === 'missions' ? 'grid' : 'none';
-           
+
             document.querySelectorAll('.bottom-nav-item').forEach(item => {
-                item.addEventListener('click', (e) => {
+                item.addEventListener('pointerup', (e) => {
                     e.preventDefault();
                     switchView(item.dataset.view);
                 });
             });
-           
-            document.getElementById('mobile-add-btn').addEventListener('click', showMobileAddForm);
-           
-            document.getElementById('close-mobile-form').addEventListener('click', hideMobileForm);
-            document.getElementById('mobile-cancel-btn').addEventListener('click', hideMobileForm);
-           
-            document.getElementById('mobile-get-current-location').addEventListener('click', getCurrentLocation);
-           
-            document.getElementById('mobile-mission-form').addEventListener('submit', async (e) => {
+
+            document.getElementById('mobile-add-btn')?.addEventListener('pointerup', showMobileAddForm);
+            document.getElementById('close-mobile-form')?.addEventListener('pointerup', hideMobileForm);
+            document.getElementById('mobile-cancel-btn')?.addEventListener('pointerup', hideMobileForm);
+            document.getElementById('mobile-get-current-location')?.addEventListener('pointerup', getCurrentLocation);
+
+            document.getElementById('mobile-mission-form')?.addEventListener('submit', async (e) => {
                 e.preventDefault();
-               
+
                 const saveBtn = document.getElementById('mobile-save-btn');
                 const originalText = saveBtn.innerHTML;
                 saveBtn.innerHTML = '<div class="loading" style="width: 20px; height: 20px; display: inline-block; margin-right: 8px;"></div> Saving...';
                 saveBtn.disabled = true;
-               
+
                 try {
                     const coordsInput = document.getElementById('mobile-mission-coords').value;
                     const coords = parseCoordinates(coordsInput);
-                   
-                    if (!coords) {
-                        throw new Error('Please enter valid coordinates (e.g., 45.4642,9.1900)');
-                    }
-                   
+                    if (!coords) throw new Error('Please enter valid coordinates (e.g., 45.4642,9.1900)');
+
                     const spotData = {
                         name: document.getElementById('mobile-mission-name').value,
                         location: document.getElementById('mobile-mission-location').value,
@@ -2453,16 +2305,12 @@
                         description: document.getElementById('mobile-mission-desc').value,
                         planA: document.getElementById('mobile-mission-plan-a').value
                     };
-                   
+
                     const altSpotsInput = document.getElementById('mobile-alternative-spots-input').value;
                     if (altSpotsInput) {
-                        try {
-                            spotData.alternativeSpots = JSON.parse(altSpotsInput);
-                        } catch (e) {
-                            console.error('Error parsing alternative spots:', e);
-                        }
+                        try { spotData.alternativeSpots = JSON.parse(altSpotsInput); } catch (e2) {}
                     }
-                   
+
                     await saveSpot(spotData);
                     hideMobileForm();
                 } catch (error) {
@@ -2473,85 +2321,70 @@
                     saveBtn.disabled = false;
                 }
             });
-           
-            document.addEventListener('touchstart', function(e) {
-                if (e.target.type === 'number') {
-                    e.target.blur();
-                }
-            }, false);
-           
-            window.addEventListener('orientationchange', () => {
-                setTimeout(() => {
-                    if (map) map.invalidateSize();
-                }, 300);
-            });
         }
-       
+
         document.addEventListener('DOMContentLoaded', async () => {
             setupPhotoUpload();
             setupMobileLayout();
-           
+
             document.querySelectorAll('.nav-item').forEach(item => {
-                item.addEventListener('click', () => switchView(item.dataset.view));
+                item.addEventListener('pointerup', () => switchView(item.dataset.view));
             });
-           
-            document.getElementById('add-mission-btn').addEventListener('click', showAddMissionModal);
-            document.getElementById('get-current-location').addEventListener('click', getCurrentLocation);
-           
-            document.getElementById('close-modal')?.addEventListener('click', () => {
+
+            document.getElementById('add-mission-btn')?.addEventListener('pointerup', showAddMissionModal);
+            document.getElementById('get-current-location')?.addEventListener('pointerup', getCurrentLocation);
+
+            document.getElementById('close-modal')?.addEventListener('pointerup', () => {
                 document.getElementById('mission-modal').style.display = 'none';
                 uploadedPhotos = [];
                 selectedAlternativeSpots = [];
             });
-           
-            document.getElementById('close-detail')?.addEventListener('click', closeDetailModal);
-           
-            document.getElementById('close-viewer')?.addEventListener('click', () => {
+
+            document.getElementById('close-detail')?.addEventListener('pointerup', closeDetailModal);
+
+            document.getElementById('close-viewer')?.addEventListener('pointerup', () => {
                 document.getElementById('photo-viewer').style.display = 'none';
             });
-           
-            document.getElementById('cancel-btn')?.addEventListener('click', () => {
+
+            document.getElementById('cancel-btn')?.addEventListener('pointerup', () => {
                 document.getElementById('mission-modal').style.display = 'none';
                 uploadedPhotos = [];
                 selectedAlternativeSpots = [];
             });
-           
-            document.getElementById('mission-modal')?.addEventListener('click', (e) => {
+
+            document.getElementById('mission-modal')?.addEventListener('pointerup', (e) => {
                 if (e.target === document.getElementById('mission-modal')) {
                     document.getElementById('mission-modal').style.display = 'none';
                     uploadedPhotos = [];
                     selectedAlternativeSpots = [];
                 }
             });
-           
-            document.getElementById('detail-modal')?.addEventListener('click', (e) => {
+
+            document.getElementById('detail-modal')?.addEventListener('pointerup', (e) => {
                 if (e.target === document.getElementById('detail-modal')) {
                     closeDetailModal();
                 }
             });
-           
-            document.getElementById('photo-viewer')?.addEventListener('click', (e) => {
+
+            document.getElementById('photo-viewer')?.addEventListener('pointerup', (e) => {
                 if (e.target === document.getElementById('photo-viewer')) {
                     document.getElementById('photo-viewer').style.display = 'none';
                 }
             });
-           
+
             document.getElementById('mission-form')?.addEventListener('submit', async (e) => {
                 e.preventDefault();
-               
+
                 const saveBtn = document.getElementById('save-btn');
                 const originalText = saveBtn.innerHTML;
                 saveBtn.innerHTML = '<div class="loading" style="width: 20px; height: 20px; display: inline-block; margin-right: 8px;"></div> Saving...';
                 saveBtn.disabled = true;
-               
+
                 try {
                     const coordsInput = document.getElementById('mission-coords').value;
                     const coords = parseCoordinates(coordsInput);
-                   
-                    if (!coords) {
-                        throw new Error('Please enter valid coordinates (e.g., 45.4642,9.1900)');
-                    }
-                   
+                    if (!coords) throw new Error('Please enter valid coordinates (e.g., 45.4642,9.1900)');
+
                     const spotData = {
                         name: document.getElementById('mission-name').value,
                         location: document.getElementById('mission-location').value,
@@ -2561,16 +2394,12 @@
                         description: document.getElementById('mission-desc').value,
                         planA: document.getElementById('mission-plan-a').value
                     };
-                   
+
                     const altSpotsInput = document.getElementById('alternative-spots-input').value;
                     if (altSpotsInput) {
-                        try {
-                            spotData.alternativeSpots = JSON.parse(altSpotsInput);
-                        } catch (e) {
-                            console.error('Error parsing alternative spots:', e);
-                        }
+                        try { spotData.alternativeSpots = JSON.parse(altSpotsInput); } catch (e2) {}
                     }
-                   
+
                     await saveSpot(spotData);
                     document.getElementById('mission-modal').style.display = 'none';
                     uploadedPhotos = [];
@@ -2583,18 +2412,19 @@
                     saveBtn.disabled = false;
                 }
             });
-           
+
             console.log('🚀 Starting application...');
-           
+
             await fetchSpots();
             await loadSpotsForSelection();
             initMap();
-           
+
             console.log('✅ Application started successfully!');
-           
+
             setInterval(fetchSpots, 30000);
-           
+
             window.addEventListener('resize', () => {
+                isMobile = window.matchMedia('(max-width: 1024px)').matches;
                 if (map) map.invalidateSize();
             });
         });
