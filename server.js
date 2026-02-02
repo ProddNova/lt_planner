@@ -8,10 +8,14 @@ const sharp = require('sharp');
 
 const app = express();
 
+// ✅ IMPORTANTISSIMO se deploy dietro proxy (Render, Nginx, ecc.)
+app.set('trust proxy', 1);
+
 // Middleware
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
+
 app.use(express.static(__dirname));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
@@ -20,14 +24,17 @@ const MONGODB_URI = 'mongodb+srv://terrilegiacomo_db_user:Prova019283@urbex-hud-
 
 console.log('🔧 Tentativo di connessione MongoDB...');
 
+// ✅ Assicurati che uploads esista sempre
+const uploadsDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+    console.log('📁 Cartella uploads creata');
+}
+
 // Configurazione Multer per upload foto
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        const uploadDir = 'uploads/';
-        if (!fs.existsSync(uploadDir)) {
-            fs.mkdirSync(uploadDir, { recursive: true });
-        }
-        cb(null, uploadDir);
+        cb(null, 'uploads/');
     },
     filename: function (req, file, cb) {
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
@@ -40,7 +47,7 @@ const fileFilter = (req, file, cb) => {
     const allowedTypes = /jpeg|jpg|png|gif|webp|heic|heif/;
     const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
     const mimetype = allowedTypes.test(file.mimetype);
-   
+
     if (mimetype && extname) {
         return cb(null, true);
     } else {
@@ -52,8 +59,8 @@ const upload = multer({
     storage: storage,
     fileFilter: fileFilter,
     limits: {
-        fileSize: 10 * 1024 * 1024, // 10MB max per file
-        files: 5 // Max 5 files
+        fileSize: 10 * 1024 * 1024,
+        files: 5
     }
 });
 
@@ -63,7 +70,7 @@ const spotSchema = new mongoose.Schema({
     location: { type: String, required: true },
     status: {
         type: String,
-        enum: ['planned', 'completed'], // Rimosso 'active'
+        enum: ['planned', 'completed'],
         default: 'planned'
     },
     lat: { type: Number, required: true },
@@ -71,7 +78,7 @@ const spotSchema = new mongoose.Schema({
     description: { type: String, required: true },
     planA: { type: String },
     alternativeSpots: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Spot' }],
-    photos: [{ type: String }],
+    photos: [{ type: String }], // ✅ ora consigliato salvarle come "/uploads/optimized-xxx.jpg"
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now }
 });
@@ -124,12 +131,13 @@ app.post('/api/spots', async (req, res) => {
     try {
         console.log('📝 Creating new spot:', req.body.name);
         const spotData = { ...req.body };
+
         if (spotData.alternativeSpots && Array.isArray(spotData.alternativeSpots)) {
             spotData.alternativeSpots = spotData.alternativeSpots
                 .filter(id => mongoose.Types.ObjectId.isValid(id))
                 .map(id => new mongoose.Types.ObjectId(id));
         }
-        
+
         const spot = new Spot(spotData);
         const savedSpot = await spot.save();
         console.log(`✅ Spot created with ID: ${savedSpot._id}`);
@@ -146,6 +154,8 @@ app.put('/api/spots/:id', async (req, res) => {
         if (!spot) return res.status(404).json({ error: 'Spot not found' });
 
         const updateData = { ...req.body };
+
+        // ✅ se non arrivano foto, mantieni le vecchie
         if (!updateData.photos && spot.photos) {
             updateData.photos = spot.photos;
         }
@@ -161,7 +171,7 @@ app.put('/api/spots/:id', async (req, res) => {
             { ...updateData, updatedAt: Date.now() },
             { new: true, runValidators: true }
         );
-        
+
         console.log(`✅ Spot updated: ${updatedSpot._id}`);
         res.json(updatedSpot);
     } catch (error) {
@@ -170,23 +180,42 @@ app.put('/api/spots/:id', async (req, res) => {
     }
 });
 
+// ✅ helper: elimina file se esiste
+function safeUnlink(filePath) {
+    try {
+        if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+    } catch (e) {
+        console.error('safeUnlink error:', e.message);
+    }
+}
+
 app.delete('/api/spots/:id', async (req, res) => {
     try {
         const spot = await Spot.findById(req.params.id);
         if (!spot) return res.status(404).json({ error: 'Spot not found' });
-       
+
+        // ✅ elimina anche optimized e thumb
         if (spot.photos && spot.photos.length > 0) {
             spot.photos.forEach(photoUrl => {
-                if (photoUrl.includes('/uploads/')) {
-                    const filename = path.basename(photoUrl);
-                    const filePath = path.join(__dirname, 'uploads', filename);
-                    if (fs.existsSync(filePath)) {
-                        fs.unlinkSync(filePath);
-                    }
+                // photoUrl può essere "/uploads/optimized-xxx.jpg" oppure "http..."
+                const basename = path.basename(photoUrl);
+                const filePath = path.join(__dirname, 'uploads', basename);
+
+                safeUnlink(filePath);
+
+                // se è optimized-xxx.jpg, prova anche thumb-xxx.jpg
+                if (basename.startsWith('optimized-')) {
+                    const originalName = basename.replace(/^optimized-/, '');
+                    safeUnlink(path.join(__dirname, 'uploads', originalName));
+                    safeUnlink(path.join(__dirname, 'uploads', `thumb-${originalName}`));
+                    safeUnlink(path.join(__dirname, 'uploads', `thumb-${basename}`));
+                } else {
+                    safeUnlink(path.join(__dirname, 'uploads', `optimized-${basename}`));
+                    safeUnlink(path.join(__dirname, 'uploads', `thumb-${basename}`));
                 }
             });
         }
-       
+
         await Spot.findByIdAndDelete(req.params.id);
         console.log(`✅ Spot deleted: ${req.params.id}`);
         res.json({ message: 'Spot deleted' });
@@ -199,18 +228,17 @@ app.delete('/api/spots/:id', async (req, res) => {
 // Funzione helper per convertire HEIC/HEIF in JPEG
 async function convertHeicToJpeg(filePath) {
     try {
-        if (!filePath.toLowerCase().endsWith('.heic') && !filePath.toLowerCase().endsWith('.heif')) {
-            return filePath;
-        }
+        const lower = filePath.toLowerCase();
+        if (!lower.endsWith('.heic') && !lower.endsWith('.heif')) return filePath;
 
         const jpegPath = filePath.replace(/\.[^/.]+$/, ".jpg");
-        
+
         await sharp(filePath)
             .jpeg({ quality: 85 })
             .toFile(jpegPath);
-        
-        fs.unlinkSync(filePath);
-        
+
+        safeUnlink(filePath);
+
         return jpegPath;
     } catch (error) {
         console.error('Error converting HEIC to JPEG:', error);
@@ -224,55 +252,61 @@ app.post('/api/upload', upload.array('photos', 5), async (req, res) => {
         if (!req.files || req.files.length === 0) {
             return res.status(400).json({ error: 'No files uploaded' });
         }
-       
+
         console.log(`📸 Uploading ${req.files.length} photos...`);
         const photoUrls = [];
-       
+
         for (const file of req.files) {
             try {
                 let processedFilePath = file.path;
-                if (file.originalname.toLowerCase().endsWith('.heic') || 
+
+                // HEIC/HEIF -> JPG
+                if (file.originalname.toLowerCase().endsWith('.heic') ||
                     file.originalname.toLowerCase().endsWith('.heif')) {
                     processedFilePath = await convertHeicToJpeg(file.path);
                     file.filename = file.filename.replace(/\.[^/.]+$/, ".jpg");
                 }
 
+                const optimizedFilename = `optimized-${file.filename}`;
                 const thumbnailFilename = `thumb-${file.filename}`;
-                const thumbnailPath = path.join('uploads', thumbnailFilename);
-               
+
+                const optimizedOut = path.join('uploads', optimizedFilename);
+                const thumbOut = path.join('uploads', thumbnailFilename);
+
                 await sharp(processedFilePath)
-                    .resize(1200, 1200, { 
+                    .resize(1200, 1200, {
                         fit: 'inside',
-                        withoutEnlargement: true 
+                        withoutEnlargement: true
                     })
-                    .jpeg({ 
+                    .jpeg({
                         quality: 85,
-                        mozjpeg: true 
+                        mozjpeg: true
                     })
-                    .toFile(path.join('uploads', `optimized-${file.filename}`));
-               
+                    .toFile(optimizedOut);
+
                 await sharp(processedFilePath)
-                    .resize(400, 400, { 
+                    .resize(400, 400, {
                         fit: 'cover',
                         position: 'center'
                     })
                     .jpeg({ quality: 80 })
-                    .toFile(thumbnailPath);
-               
-                const baseUrl = `${req.protocol}://${req.get('host')}`;
-                photoUrls.push(`${baseUrl}/uploads/optimized-${file.filename}`);
-               
-                if (fs.existsSync(processedFilePath) && processedFilePath !== path.join('uploads', `optimized-${file.filename}`)) {
-                    fs.unlinkSync(processedFilePath);
+                    .toFile(thumbOut);
+
+                // ✅ FIX: salva URL RELATIVO (non dipende da host/protocol/porta)
+                photoUrls.push(`/uploads/${optimizedFilename}`);
+
+                // pulisco file temporaneo originale (se non è già stato rimosso)
+                if (processedFilePath && fs.existsSync(processedFilePath)) {
+                    safeUnlink(processedFilePath);
                 }
-               
+
             } catch (error) {
                 console.error('Error processing image:', error);
-                const baseUrl = `${req.protocol}://${req.get('host')}`;
-                photoUrls.push(`${baseUrl}/uploads/${file.filename}`);
+                // fallback relativo
+                photoUrls.push(`/uploads/${file.filename}`);
             }
         }
-       
+
         console.log(`✅ Photos uploaded: ${photoUrls.length} files`);
         res.json({
             message: 'Photos uploaded successfully',
@@ -281,44 +315,36 @@ app.post('/api/upload', upload.array('photos', 5), async (req, res) => {
         });
     } catch (error) {
         console.error('Upload error:', error);
-        
+
         if (error instanceof multer.MulterError) {
             if (error.code === 'LIMIT_FILE_SIZE') {
-                return res.status(400).json({ 
-                    error: 'File too large', 
-                    message: 'Maximum file size is 10MB per image' 
+                return res.status(400).json({
+                    error: 'File too large',
+                    message: 'Maximum file size is 10MB per image'
                 });
             }
             if (error.code === 'LIMIT_FILE_COUNT') {
-                return res.status(400).json({ 
-                    error: 'Too many files', 
-                    message: 'Maximum 5 photos allowed' 
+                return res.status(400).json({
+                    error: 'Too many files',
+                    message: 'Maximum 5 photos allowed'
                 });
             }
         }
-        
-        res.status(500).json({ 
-            error: 'Error uploading photos', 
+
+        res.status(500).json({
+            error: 'Error uploading photos',
             details: error.message,
             suggestion: 'Try with smaller images or different format (JPEG recommended)'
         });
     }
 });
 
-// Endpoint per cancellare foto specifiche
 app.delete('/api/photos/:filename', (req, res) => {
     try {
         const filename = req.params.filename;
-        const filePath = path.join(__dirname, 'uploads', filename);
-        const thumbPath = path.join(__dirname, 'uploads', `thumb-${filename}`);
-        const optimizedPath = path.join(__dirname, 'uploads', `optimized-${filename}`);
-       
-        [filePath, thumbPath, optimizedPath].forEach(path => {
-            if (fs.existsSync(path)) {
-                fs.unlinkSync(path);
-            }
-        });
-       
+        safeUnlink(path.join(__dirname, 'uploads', filename));
+        safeUnlink(path.join(__dirname, 'uploads', `thumb-${filename}`));
+        safeUnlink(path.join(__dirname, 'uploads', `optimized-${filename}`));
         res.json({ message: 'Photo deleted' });
     } catch (error) {
         console.error('Error deleting photo:', error);
@@ -326,7 +352,6 @@ app.delete('/api/photos/:filename', (req, res) => {
     }
 });
 
-// Test route
 app.get('/api/test', async (req, res) => {
     try {
         const connectionState = mongoose.connection.readyState;
@@ -334,14 +359,14 @@ app.get('/api/test', async (req, res) => {
             connectionState: connectionState,
             state: ['disconnected', 'connected', 'connecting', 'disconnecting'][connectionState]
         };
-       
+
         if (connectionState === 1) {
             const ping = await mongoose.connection.db.admin().ping();
             dbInfo.ping = ping;
             dbInfo.databaseName = mongoose.connection.db.databaseName;
             dbInfo.collections = await mongoose.connection.db.listCollections().toArray();
         }
-       
+
         res.json({
             status: connectionState === 1 ? 'OK' : 'ERROR',
             message: connectionState === 1 ? 'Database connesso' : 'Database non connesso',
@@ -356,12 +381,10 @@ app.get('/api/test', async (req, res) => {
     }
 });
 
-// Health check
 app.get('/api/health', (req, res) => {
     const state = mongoose.connection.readyState;
-    const uploadsDir = path.join(__dirname, 'uploads');
     const hasUploadsDir = fs.existsSync(uploadsDir);
-   
+
     res.json({
         status: state === 1 ? 'healthy' : 'unhealthy',
         database: state === 1 ? 'connected' : 'disconnected',
@@ -372,11 +395,10 @@ app.get('/api/health', (req, res) => {
     });
 });
 
-// Info API
 app.get('/api', (req, res) => {
     res.json({
         message: 'URBEX HUD API',
-        version: '4.0.0',
+        version: '4.1.0',
         features: ['photo-upload', 'mobile-optimized', 'coordinates-parser', 'iphone-support', 'heic-conversion', 'alternative-spots'],
         limits: {
             maxFileSize: '10MB',
@@ -400,13 +422,13 @@ app.get('/api', (req, res) => {
 app.post('/api/parse-coordinates', (req, res) => {
     try {
         const { input } = req.body;
-       
+
         if (!input) {
             return res.status(400).json({ error: 'No input provided' });
         }
-       
+
         const parsed = parseCoordinates(input);
-       
+
         if (parsed) {
             res.json({ success: true, coordinates: parsed });
         } else {
@@ -424,10 +446,9 @@ app.post('/api/parse-coordinates', (req, res) => {
     }
 });
 
-// Funzione helper per parse coordinates
 function parseCoordinates(input) {
     input = input.trim();
-   
+
     if (input.includes('google.com/maps') || input.includes('maps.app.goo.gl')) {
         try {
             const url = new URL(input);
@@ -438,34 +459,28 @@ function parseCoordinates(input) {
                     return { lat: coords[0], lng: coords[1] };
                 }
             }
-           
+
             const match = input.match(/@(-?\d+\.?\d*),(-?\d+\.?\d*)/);
             if (match) {
                 return { lat: parseFloat(match[1]), lng: parseFloat(match[2]) };
             }
-        } catch (e) {
-            // Continua con altri metodi
-        }
+        } catch (e) {}
     }
-   
+
     const parts = input.split(',');
     if (parts.length === 2) {
         const lat = parseFloat(parts[0].trim());
         const lng = parseFloat(parts[1].trim());
-        if (!isNaN(lat) && !isNaN(lng)) {
-            return { lat, lng };
-        }
+        if (!isNaN(lat) && !isNaN(lng)) return { lat, lng };
     }
-   
+
     const parts2 = input.split(/[\s,;]+/);
     if (parts2.length >= 2) {
         const lat = parseFloat(parts2[0]);
         const lng = parseFloat(parts2[1]);
-        if (!isNaN(lat) && !isNaN(lng)) {
-            return { lat, lng };
-        }
+        if (!isNaN(lat) && !isNaN(lng)) return { lat, lng };
     }
-   
+
     return null;
 }
 
@@ -478,7 +493,7 @@ app.get('*', (req, res) => {
 async function connectToDatabase() {
     try {
         console.log('🔄 Connessione a MongoDB Atlas...');
-       
+
         const options = {
             useNewUrlParser: true,
             useUnifiedTopology: true,
@@ -487,23 +502,22 @@ async function connectToDatabase() {
             retryWrites: true,
             w: 'majority'
         };
-       
+
         await mongoose.connect(MONGODB_URI, options);
         console.log('✅ Connesso a MongoDB Atlas');
         console.log(`📊 Database: ${mongoose.connection.db.databaseName}`);
-       
+
         await mongoose.connection.db.admin().ping();
         console.log('📡 Database risponde correttamente');
-       
+
         return true;
     } catch (error) {
         console.error('❌ ERRORE CONNESSIONE MONGODB:', error.message);
         console.log('\n🔧 DIAGNOSTICA:');
         console.log('1. Controlla MongoDB Atlas > Network Access > IP 0.0.0.0/0');
-        console.log('2. Controlla che la password sia corretta: Prova019283');
+        console.log('2. Controlla che la password sia corretta');
         console.log('3. Controlla che l\'utente abbia permessi');
         console.log('4. Stringa usata:', MONGODB_URI.replace(/Prova019283/, '***'));
-       
         return false;
     }
 }
@@ -513,10 +527,10 @@ async function seedDatabase() {
     try {
         const count = await Spot.countDocuments();
         console.log(`📊 Documenti nel database: ${count}`);
-       
+
         if (count === 0) {
             console.log('📦 Inserimento dati di esempio...');
-            
+
             const sampleSpots = [
                 {
                     name: "EX MANIFATTURA TABACCHI",
@@ -555,25 +569,19 @@ async function seedDatabase() {
                     ]
                 }
             ];
-            
+
             const insertedSpots = await Spot.insertMany(sampleSpots);
             console.log('✅ Dati di esempio inseriti');
-            
+
             if (insertedSpots.length >= 3) {
                 await Spot.findByIdAndUpdate(insertedSpots[0]._id, {
                     alternativeSpots: [insertedSpots[1]._id, insertedSpots[2]._id]
                 });
-                
+
                 await Spot.findByIdAndUpdate(insertedSpots[1]._id, {
                     alternativeSpots: [insertedSpots[0]._id]
                 });
             }
-        }
-       
-        const uploadsDir = path.join(__dirname, 'uploads');
-        if (!fs.existsSync(uploadsDir)) {
-            fs.mkdirSync(uploadsDir, { recursive: true });
-            console.log('📁 Cartella uploads creata');
         }
     } catch (error) {
         console.error('❌ Errore durante il seed:', error.message);
@@ -583,12 +591,12 @@ async function seedDatabase() {
 // Avvio server
 async function startServer() {
     const PORT = process.env.PORT || 10000;
-   
+
     const connected = await connectToDatabase();
-   
+
     if (connected) {
         await seedDatabase();
-       
+
         app.listen(PORT, () => {
             console.log(`\n🎉 SERVER AVVIATO CON SUCCESSO!`);
             console.log(`🌐 Frontend: http://localhost:${PORT}`);
@@ -610,7 +618,7 @@ process.on('uncaughtException', (err) => {
     console.error('❌ Errore non gestito:', err);
 });
 
-process.on('unhandledRejection', (reason, promise) => {
+process.on('unhandledRejection', (reason) => {
     console.error('❌ Promise non gestita:', reason);
 });
 
