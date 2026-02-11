@@ -39,7 +39,6 @@
             overflow-x: hidden;
         }
 
-        /* ✅ MOBILE CLICK/TAP FIX: rende i tap più affidabili */
         button, a, .btn, .btn-small, .nav-item, .bottom-nav-item, .card {
             touch-action: manipulation;
         }
@@ -352,7 +351,7 @@
         .card-image {
             width: 100%;
             height: 100%;
-            object-fit: cover; /* ✅ meglio per preview satellitare */
+            object-fit: cover;
             background: var(--bg-primary);
         }
 
@@ -425,28 +424,48 @@
             align-items: center;
             padding-top: 1rem;
             border-top: 1px solid var(--border);
+            gap: 0.75rem;
         }
 
         .card-date {
             font-size: 0.8rem;
             color: var(--text-dim);
+            min-width: 28px;
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 0.5rem;
         }
 
         .btn-small {
             background: transparent;
             color: var(--accent);
             border: 1px solid var(--accent);
-            padding: 0.5rem 1rem;
+            padding: 0.5rem 0.9rem;
             border-radius: 6px;
             font-size: 0.8rem;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s;
+            white-space: nowrap;
         }
 
         .btn-small:hover {
             background: var(--accent);
             color: var(--bg-primary);
+        }
+
+        .btn-small.maps {
+            border-color: rgba(255,255,255,0.25);
+            color: var(--text);
+        }
+
+        .btn-small.maps:hover {
+            background: rgba(255,255,255,0.08);
+            color: var(--text);
+            border-color: rgba(255,255,255,0.35);
+            transform: none;
         }
 
         .map-container {
@@ -638,73 +657,6 @@
             margin-top: 0.5rem;
         }
 
-        .photo-upload-container {
-            border: 2px dashed var(--border);
-            border-radius: 8px;
-            padding: 2rem;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .photo-upload-container:hover {
-            border-color: var(--accent);
-        }
-
-        .photo-upload-icon {
-            font-size: 3rem;
-            color: var(--text-dim);
-            margin-bottom: 1rem;
-        }
-
-        .photo-upload-text {
-            color: var(--text-dim);
-            margin-bottom: 1rem;
-        }
-
-        .photo-preview-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-            gap: 1rem;
-            margin-top: 1.5rem;
-        }
-
-        .photo-preview {
-            position: relative;
-            border-radius: 8px;
-            overflow: hidden;
-            aspect-ratio: 1;
-            background: var(--bg-primary);
-        }
-
-        .photo-preview img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-            background: var(--bg-primary);
-        }
-
-        .remove-photo {
-            position: absolute;
-            top: 5px;
-            right: 5px;
-            background: rgba(0, 0, 0, 0.7);
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 25px;
-            height: 25px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            font-size: 0.8rem;
-        }
-
-        .remove-photo:hover {
-            background: var(--danger);
-        }
-
         .coordinates-help {
             font-size: 0.75rem;
             color: var(--text-dim);
@@ -736,8 +688,8 @@
 
         .detail-header {
             text-align: center;
-            margin-bottom: 2rem;
-            padding-bottom: 2rem;
+            margin-bottom: 1.25rem;
+            padding-bottom: 1.25rem;
             border-bottom: 1px solid var(--border);
         }
 
@@ -752,6 +704,23 @@
             color: var(--text-dim);
         }
 
+        .detail-satellite {
+            width: 100%;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+            background: var(--bg-primary);
+            margin: 1.25rem 0 0.5rem 0;
+        }
+
+        .detail-satellite img {
+            width: 100%;
+            height: 260px;
+            object-fit: cover;
+            display: block;
+            background: var(--bg-primary);
+        }
+
         .detail-grid {
             display: grid;
             grid-template-columns: 2fr 1fr;
@@ -760,7 +729,7 @@
         }
 
         .detail-section {
-            margin-bottom: 2rem;
+            margin-bottom: 1.5rem;
         }
 
         .detail-section h3 {
@@ -777,32 +746,6 @@
             border: 1px solid var(--border);
             line-height: 1.6;
             color: var(--text-dim);
-        }
-
-        .gallery {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 0.75rem;
-        }
-
-        .gallery-item {
-            background: var(--bg-primary);
-            border-radius: 8px;
-            overflow: hidden;
-            border: 1px solid var(--border);
-            cursor: pointer;
-        }
-
-        .gallery-item img {
-            width: 100%;
-            height: 120px;
-            object-fit: contain;
-            background: var(--bg-primary);
-        }
-
-        .gallery-item:hover {
-            border-color: var(--accent);
-            transform: scale(1.05);
         }
 
         .detail-map {
@@ -846,13 +789,6 @@
             border-radius: 8px;
             border: 1px solid var(--border);
             margin-bottom: 1rem;
-        }
-
-        .plan-card h4 {
-            font-size: 0.9rem;
-            font-weight: 600;
-            margin-bottom: 0.75rem;
-            color: var(--accent);
         }
 
         .plan-card p {
@@ -935,27 +871,6 @@
         .empty-state p {
             color: var(--text-dim);
             margin-bottom: 1.5rem;
-        }
-
-        .photo-viewer {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.95);
-            z-index: 2000;
-            align-items: center;
-            justify-content: center;
-            padding: 2rem;
-        }
-
-        .photo-viewer img {
-            max-width: 90%;
-            max-height: 90%;
-            object-fit: contain;
-            border-radius: 8px;
         }
 
         .loading {
@@ -1050,11 +965,9 @@
             }
             .form-grid { grid-template-columns: 1fr; gap: 1rem; }
 
-            /* ✅ FIX: su mobile NON nascondo tutti i modal, ma SOLO quello di ADD/EDIT desktop */
+            /* ✅ su mobile nascondo SOLO il modal desktop add/edit */
             #mission-modal { display: none !important; }
 
-            .gallery { grid-template-columns: repeat(2, 1fr); }
-            .gallery-item img { height: 150px; }
             .action-buttons { flex-direction: column; }
             .action-buttons .btn { width: 100%; justify-content: center; }
             .card { margin-bottom: 1rem; }
@@ -1064,20 +977,17 @@
                 padding: 1rem;
                 font-size: 1rem;
             }
-            .photo-upload-container { padding: 2rem 1rem; }
-            .photo-preview-grid { grid-template-columns: repeat(3, 1fr); }
             .alternative-spots-container { max-height: 150px; }
+            .detail-satellite img { height: 220px; }
         }
 
         @media (max-width: 480px) {
-            .gallery { grid-template-columns: 1fr; }
-            .gallery-item img { height: 200px; }
             .detail-title { font-size: 1.5rem; }
             .mobile-header .logo h1 { font-size: 1.1rem; }
             .mobile-stat-value { font-size: 1.2rem; }
-            .photo-preview-grid { grid-template-columns: repeat(2, 1fr); }
             .mobile-form-content { padding-bottom: 6rem; }
             .mobile-form-footer { flex-direction: column; }
+            .detail-satellite img { height: 200px; }
         }
 
         .leaflet-popup-content-wrapper {
@@ -1224,6 +1134,7 @@
         </div>
     </nav>
 
+    <!-- ✅ Mobile Add/Edit Form -->
     <div class="mobile-form-page" id="mobile-form-page">
         <div class="mobile-form-header">
             <h2 id="mobile-form-title">Add New Spot</h2>
@@ -1267,6 +1178,7 @@
                         <label for="mobile-mission-plan-a"><i class="fas fa-door-open"></i> Main Access</label>
                         <textarea id="mobile-mission-plan-a" rows="3" placeholder="How to get in..."></textarea>
                     </div>
+
                     <div class="form-group full">
                         <label><i class="fas fa-exchange-alt"></i> Alternative Spots (max 3)</label>
                         <div class="alternative-spots-container" id="mobile-alternative-spots-container">
@@ -1276,22 +1188,6 @@
                         <div class="alternative-spots-help">
                             Select up to 3 spots that are good alternatives to this one
                         </div>
-                    </div>
-                    <div class="form-group full">
-                        <label><i class="fas fa-camera"></i> Photos</label>
-                        <div class="photo-upload-container" id="mobile-photo-drop-area">
-                            <div class="photo-upload-icon">
-                                <i class="fas fa-cloud-upload-alt"></i>
-                            </div>
-                            <div class="photo-upload-text">
-                                <p>Tap to select photos</p>
-                                <p style="font-size: 0.8rem; margin-top: 0.5rem; color: var(--text-dim);">
-                                    Max 5 photos, 10MB each
-                                </p>
-                            </div>
-                            <input type="file" id="mobile-photo-input" accept="image/*" multiple style="display: none;">
-                        </div>
-                        <div class="photo-preview-grid" id="mobile-photo-preview"></div>
                     </div>
                 </div>
                 <input type="hidden" id="mobile-alternative-spots-input">
@@ -1305,6 +1201,7 @@
         </div>
     </div>
 
+    <!-- ✅ Detail Modal -->
     <div class="modal-overlay" id="detail-modal">
         <div class="modal">
             <div class="modal-header">
@@ -1315,6 +1212,7 @@
         </div>
     </div>
 
+    <!-- ✅ Desktop Add/Edit Modal -->
     <div class="modal-overlay" id="mission-modal">
         <div class="modal">
             <div class="modal-header">
@@ -1359,6 +1257,7 @@
                             <label for="mission-plan-a"><i class="fas fa-door-open"></i> Main Access</label>
                             <textarea id="mission-plan-a" rows="3" placeholder="How to get in..."></textarea>
                         </div>
+
                         <div class="form-group full">
                             <label><i class="fas fa-exchange-alt"></i> Alternative Spots (max 3)</label>
                             <div class="alternative-spots-container" id="alternative-spots-container">
@@ -1368,22 +1267,6 @@
                             <div class="alternative-spots-help">
                                 Select up to 3 spots that are good alternatives to this one
                             </div>
-                        </div>
-                        <div class="form-group full">
-                            <label><i class="fas fa-camera"></i> Photos</label>
-                            <div class="photo-upload-container" id="photo-drop-area">
-                                <div class="photo-upload-icon">
-                                    <i class="fas fa-cloud-upload-alt"></i>
-                                </div>
-                                <div class="photo-upload-text">
-                                    <p>Click or drag to select photos</p>
-                                    <button type="button" class="btn" id="browse-photos">
-                                        <i class="fas fa-folder-open"></i> Browse Files
-                                    </button>
-                                </div>
-                                <input type="file" id="photo-input" accept="image/*" multiple style="display: none;">
-                            </div>
-                            <div class="photo-preview-grid" id="photo-preview"></div>
                         </div>
                     </div>
                     <input type="hidden" id="alternative-spots-input">
@@ -1398,23 +1281,15 @@
         </div>
     </div>
 
-    <div class="photo-viewer" id="photo-viewer">
-        <button class="close-btn" id="close-viewer" type="button" style="position: absolute; top: 2rem; right: 2rem;">×</button>
-        <img id="viewer-image" src="" alt="">
-    </div>
-
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <script>
         // ✅ API URL
-        const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+        const API_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
             ? 'http://localhost:10000/api'
             : '/api';
 
-        const ORIGIN = window.location.origin;
-
         console.log('🌐 API URL:', API_URL);
-        console.log('📍 Current hostname:', window.location.hostname);
 
         let map = null;
         let markers = [];
@@ -1423,7 +1298,6 @@
         let currentView = 'missions';
         let editingMissionId = null;
         let currentDetailMissionId = null;
-        let uploadedPhotos = [];
         let isMobile = window.matchMedia('(max-width: 1024px)').matches;
         let selectedAlternativeSpots = [];
 
@@ -1444,14 +1318,12 @@
             };
 
             const clickHandler = (e) => {
-                // blocco il "ghost click" dopo un tap touch
                 if (Date.now() - lastTouchTime < TAP_GUARD_MS) return;
                 wrapped(e);
             };
 
             if (SUPPORTS_POINTER) {
                 el.addEventListener('pointerup', (e) => {
-                    // su desktop (mouse) lascio gestire a click per evitare doppio trigger
                     if (e.pointerType === 'mouse' || e.pointerType === 'pen') return;
                     lastTouchTime = Date.now();
                     wrapped(e);
@@ -1479,9 +1351,8 @@
         }
 
         function buildEsriStaticImage(lat, lng, zoom = 19, width = 900, height = 500) {
-            // calcolo bbox in EPSG:3857 basato su zoom (m/px)
             const { x, y } = latLngToWebMercator(lat, lng);
-            const initialRes = 156543.03392804097; // m/px @ zoom 0
+            const initialRes = 156543.03392804097;
             const res = initialRes / Math.pow(2, zoom);
 
             const halfW = (width / 2) * res;
@@ -1489,11 +1360,11 @@
 
             const bbox = `${x - halfW},${y - halfH},${x + halfW},${y + halfH}`;
 
-            return `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/export` +
-                   `?bbox=${encodeURIComponent(bbox)}` +
-                   `&bboxSR=3857&imageSR=3857` +
-                   `&size=${width},${height}` +
-                   `&format=jpg&f=image`;
+            return 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/export' +
+                `?bbox=${encodeURIComponent(bbox)}` +
+                '&bboxSR=3857&imageSR=3857' +
+                `&size=${width},${height}` +
+                '&format=jpg&f=image';
         }
 
         function getSatelliteSnapshotUrl(lat, lng, zoom = 19, width = 900, height = 500) {
@@ -1505,17 +1376,8 @@
             return url;
         }
 
-        // ✅ Risolve URL foto: se è relativa (/uploads/...) la rende assoluta
-        function resolveUrl(url) {
-            if (!url) return url;
-            if (url.startsWith('http://') || url.startsWith('https://')) return url;
-            if (url.startsWith('//')) return window.location.protocol + url;
-            if (url.startsWith('/')) return ORIGIN + url;
-            return ORIGIN + '/' + url;
-        }
-
         function parseCoordinates(input) {
-            input = input.trim();
+            input = String(input || '').trim();
 
             if (input.includes('google.com/maps') || input.includes('maps.app.goo.gl')) {
                 try {
@@ -1527,11 +1389,8 @@
                             return { lat: coords[0], lng: coords[1] };
                         }
                     }
-
                     const match = input.match(/@(-?\d+\.?\d*),(-?\d+\.?\d*)/);
-                    if (match) {
-                        return { lat: parseFloat(match[1]), lng: parseFloat(match[2]) };
-                    }
+                    if (match) return { lat: parseFloat(match[1]), lng: parseFloat(match[2]) };
                 } catch (e) {}
             }
 
@@ -1560,6 +1419,14 @@
             setTimeout(() => div.remove(), 3000);
         }
 
+        function openInGoogleMaps(lat, lng) {
+            if (typeof lat !== 'number' || typeof lng !== 'number') {
+                showMessage('Coordinates missing for this spot', 'error');
+                return;
+            }
+            window.open(`https://www.google.com/maps?q=${lat},${lng}`, '_blank');
+        }
+
         function getCurrentLocation() {
             if (!navigator.geolocation) {
                 showMessage('Geolocation not supported', 'error');
@@ -1572,11 +1439,13 @@
                 (position) => {
                     const lat = position.coords.latitude;
                     const lng = position.coords.longitude;
+
                     if (isMobile) {
                         document.getElementById('mobile-mission-coords').value = `${lat.toFixed(6)},${lng.toFixed(6)}`;
                     } else {
                         document.getElementById('mission-coords').value = `${lat.toFixed(6)},${lng.toFixed(6)}`;
                     }
+
                     showMessage('Location obtained!', 'success');
                 },
                 (error) => {
@@ -1589,12 +1458,10 @@
 
         async function loadSpotsForSelection() {
             try {
-                console.log('📋 Loading spots for selection...');
                 const response = await fetch(`${API_URL}/spots-minimal`);
                 if (!response.ok) throw new Error('Network error');
                 const data = await response.json();
                 allSpotsForSelection = data;
-                console.log(`✅ Loaded ${data.length} spots for selection`);
                 return data;
             } catch (error) {
                 console.error('Error loading spots for selection:', error);
@@ -1607,7 +1474,6 @@
             if (!container || allSpotsForSelection.length === 0) return;
 
             const spotsToShow = allSpotsForSelection.filter(spot => spot._id !== excludeId);
-
             container.innerHTML = '';
 
             if (spotsToShow.length === 0) {
@@ -1627,7 +1493,6 @@
                     <span class="alternative-spot-status ${spot.status}">${spot.status === 'planned' ? 'To Explore' : 'Explored'}</span>
                 `;
 
-                // ✅ toggle robusto: tap su tutta la riga (mobile-safe)
                 onTap(item, (e) => {
                     const checkbox = item.querySelector('input[type="checkbox"]');
                     if (e.target !== checkbox) checkbox.checked = !checkbox.checked;
@@ -1662,109 +1527,12 @@
             if (item) item.classList.toggle('selected', isChecked);
         }
 
-        // ✅ Preview foto globale (riutilizzabile anche in edit)
-        function renderPhotoPreview(previewContainer) {
-            if (!previewContainer) return;
-            previewContainer.innerHTML = '';
-
-            uploadedPhotos.forEach((photo, index) => {
-                const preview = document.createElement('div');
-                preview.className = 'photo-preview';
-                preview.innerHTML = `
-                    <img src="${resolveUrl(photo.dataUrl)}" alt="Preview ${index + 1}">
-                    <button type="button" class="remove-photo" data-index="${index}">×</button>
-                `;
-                previewContainer.appendChild(preview);
-            });
-
-            previewContainer.querySelectorAll('.remove-photo').forEach(btn => {
-                onTap(btn, (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    const index = parseInt(btn.getAttribute('data-index'), 10);
-                    uploadedPhotos.splice(index, 1);
-                    renderPhotoPreview(previewContainer);
-                }, { preventDefault: true, stopPropagation: true });
-            });
-        }
-
-        function setupPhotoUpload() {
-            const fileInput = document.getElementById('photo-input');
-            const previewContainer = document.getElementById('photo-preview');
-            const browseBtn = document.getElementById('browse-photos');
-
-            if (browseBtn) onTap(browseBtn, () => fileInput.click());
-            if (fileInput) fileInput.addEventListener('change', (e) => handleFiles(e, previewContainer));
-
-            const mobileDropArea = document.getElementById('mobile-photo-drop-area');
-            const mobileFileInput = document.getElementById('mobile-photo-input');
-            const mobilePreviewContainer = document.getElementById('mobile-photo-preview');
-
-            if (mobileDropArea) onTap(mobileDropArea, () => mobileFileInput.click());
-            if (mobileFileInput) mobileFileInput.addEventListener('change', (e) => handleFiles(e, mobilePreviewContainer));
-
-            function handleFiles(e, targetPreview) {
-                const files = Array.from(e.target.files || []);
-                if (uploadedPhotos.length + files.length > 5) {
-                    showMessage('Maximum 5 photos allowed (total)', 'error');
-                    e.target.value = '';
-                    return;
-                }
-
-                files.forEach(file => {
-                    if (!file.type.match('image.*')) {
-                        showMessage('Only image files are allowed', 'error');
-                        return;
-                    }
-
-                    const reader = new FileReader();
-                    reader.onload = function(ev) {
-                        const photoData = {
-                            id: Date.now() + Math.random(),
-                            dataUrl: ev.target.result,
-                            file: file
-                        };
-                        uploadedPhotos.push(photoData);
-                        renderPhotoPreview(targetPreview);
-                    };
-                    reader.readAsDataURL(file);
-                });
-
-                e.target.value = '';
-            }
-
-            // pulizia
-            onTap(document.getElementById('close-modal'), () => {
-                uploadedPhotos = [];
-                renderPhotoPreview(previewContainer);
-            });
-
-            onTap(document.getElementById('cancel-btn'), () => {
-                uploadedPhotos = [];
-                renderPhotoPreview(previewContainer);
-            });
-
-            onTap(document.getElementById('close-mobile-form'), () => {
-                uploadedPhotos = [];
-                renderPhotoPreview(mobilePreviewContainer);
-            });
-
-            onTap(document.getElementById('mobile-cancel-btn'), () => {
-                uploadedPhotos = [];
-                renderPhotoPreview(mobilePreviewContainer);
-            });
-        }
-
         async function fetchSpots() {
             try {
-                console.log('🔄 Fetching spots from API...');
                 const response = await fetch(`${API_URL}/spots`);
-                console.log('📡 Response status:', response.status);
-
                 if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-
                 const data = await response.json();
-                console.log(`✅ Found ${data.length} spots`);
+
                 missions = data;
 
                 renderMissions();
@@ -1788,40 +1556,8 @@
             }
         }
 
-        async function uploadPhotos() {
-            if (uploadedPhotos.length === 0) return [];
-
-            try {
-                const formData = new FormData();
-                uploadedPhotos.forEach(photo => {
-                    if (photo.file) formData.append('photos', photo.file);
-                });
-
-                const response = await fetch(`${API_URL}/upload`, {
-                    method: 'POST',
-                    body: formData
-                });
-
-                if (!response.ok) throw new Error('Photo upload failed');
-                const data = await response.json();
-
-                return (data.urls || []).map(u => resolveUrl(u));
-            } catch (error) {
-                console.error('Error uploading photos:', error);
-                return uploadedPhotos.map(photo => resolveUrl(photo.dataUrl));
-            }
-        }
-
         async function saveSpot(spotData) {
             try {
-                if (uploadedPhotos.length > 0) {
-                    const photoUrls = await uploadPhotos();
-                    spotData.photos = photoUrls.map(u => {
-                        if (u.startsWith(ORIGIN + '/uploads/')) return u.replace(ORIGIN, '');
-                        return u;
-                    });
-                }
-
                 if (selectedAlternativeSpots.length > 0) {
                     spotData.alternativeSpots = selectedAlternativeSpots;
                 }
@@ -1833,7 +1569,7 @@
                 const method = editingMissionId ? 'PUT' : 'POST';
 
                 const response = await fetch(url, {
-                    method: method,
+                    method,
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(spotData)
                 });
@@ -1886,9 +1622,10 @@
 
         function initMap() {
             if (map) return;
+
             map = L.map('map').setView([45.4642, 9.1900], 6);
 
-            // ✅ SATELLITE FREE (Esri World Imagery) - NO API KEY
+            // ✅ Satellite free (Esri)
             L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
                 attribution: 'Tiles © Esri — Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community',
                 maxZoom: 19
@@ -1919,11 +1656,15 @@
                     const marker = L.marker([mission.lat, mission.lng], { icon: customIcon })
                         .addTo(map)
                         .bindPopup(`
-                            <div style="max-width: 250px;">
+                            <div style="max-width: 260px;">
                                 <h3 style="margin: 0 0 8px 0; font-size: 1rem; color: var(--accent);">${mission.name}</h3>
                                 <p style="margin: 4px 0; font-size: 0.875rem;">📍 ${mission.location}</p>
                                 <p style="margin: 4px 0; font-size: 0.875rem; color: #888;">${mission.status === 'planned' ? 'To Explore' : 'Explored'}</p>
-                                <button data-id="${mission._id}" class="btn open-detail-btn" style="width: 100%; margin-top: 8px; padding: 8px; font-size: 0.875rem;">View Details</button>
+
+                                <div style="display:flex; gap:8px; margin-top:10px;">
+                                    <button data-id="${mission._id}" class="btn open-detail-btn" style="flex:1; padding: 8px; font-size: 0.875rem;">View</button>
+                                    <button data-lat="${mission.lat}" data-lng="${mission.lng}" class="btn open-maps-btn" style="flex:1; padding: 8px; font-size: 0.875rem; background: transparent; color: var(--text); border: 1px solid rgba(255,255,255,0.25);">Maps</button>
+                                </div>
                             </div>
                         `);
 
@@ -1931,12 +1672,18 @@
                 }
             });
 
-            // ✅ popup button click mobile-safe
-            map?.on('popupopen', (e) => {
-                const btn = e.popup.getElement()?.querySelector('.open-detail-btn');
-                if (btn) {
-                    onTap(btn, () => showMissionDetail(btn.dataset.id));
-                }
+            map.off('popupopen');
+            map.on('popupopen', (e) => {
+                const root = e.popup.getElement();
+                const btnDetail = root?.querySelector('.open-detail-btn');
+                const btnMaps = root?.querySelector('.open-maps-btn');
+
+                if (btnDetail) onTap(btnDetail, () => showMissionDetail(btnDetail.dataset.id));
+                if (btnMaps) onTap(btnMaps, () => {
+                    const lat = parseFloat(btnMaps.dataset.lat);
+                    const lng = parseFloat(btnMaps.dataset.lng);
+                    openInGoogleMaps(lat, lng);
+                });
             });
 
             if (markers.length > 0) {
@@ -1964,7 +1711,7 @@
             });
 
             const title = view === 'missions' ? 'Spot List' :
-                         view === 'map' ? 'Map View' : 'Archive';
+                          view === 'map' ? 'Map View' : 'Archive';
 
             document.getElementById('page-title').textContent = title;
 
@@ -1978,7 +1725,6 @@
             }
         }
 
-        // ✅ click/tap robusto su card: usa data-id, non il name
         function setupCardClickEvents() {
             const container = document.getElementById('missions-container');
             if (!container) return;
@@ -1987,11 +1733,19 @@
             const newContainer = document.getElementById('missions-container');
 
             const handler = (e) => {
-                const btn = e.target.closest('.view-btn');
+                const viewBtn = e.target.closest('.view-btn');
+                const mapsBtn = e.target.closest('.maps-btn');
                 const card = e.target.closest('.card');
 
-                if (btn) {
-                    const id = btn.dataset.id;
+                if (mapsBtn) {
+                    const lat = parseFloat(mapsBtn.dataset.lat);
+                    const lng = parseFloat(mapsBtn.dataset.lng);
+                    openInGoogleMaps(lat, lng);
+                    return;
+                }
+
+                if (viewBtn) {
+                    const id = viewBtn.dataset.id;
                     if (id) showMissionDetail(id);
                     return;
                 }
@@ -2002,7 +1756,6 @@
                 }
             };
 
-            // ✅ qui click è sufficiente su mobile; pointerup resta su browser che lo supportano
             newContainer.addEventListener('click', handler);
             if (SUPPORTS_POINTER) newContainer.addEventListener('pointerup', handler);
             else newContainer.addEventListener('touchend', handler, { passive: true });
@@ -2030,6 +1783,7 @@
             }
 
             container.innerHTML = '';
+
             missions.forEach(mission => {
                 const card = document.createElement('div');
                 card.className = 'card touch-optimized';
@@ -2041,14 +1795,13 @@
                     case 'completed': statusText = 'Explored'; statusClass = 'badge-completed'; break;
                 }
 
-                // ✅ cover: satellite static sulle coordinate (anche vecchi spot)
-                const mainPhoto = (mission.lat && mission.lng)
+                const cover = (mission.lat && mission.lng)
                     ? getSatelliteSnapshotUrl(mission.lat, mission.lng, 19, 900, 500)
-                    : (mission.photos && mission.photos.length > 0 ? resolveUrl(mission.photos[0]) : '');
+                    : '';
 
                 card.innerHTML = `
                     <div class="card-image-container">
-                        <img src="${mainPhoto}" alt="${mission.name}" class="card-image">
+                        <img src="${cover}" alt="${mission.name}" class="card-image">
                     </div>
                     <div class="card-content">
                         <div class="card-header">
@@ -2056,16 +1809,18 @@
                             <div class="badge ${statusClass}">${statusText}</div>
                         </div>
                         <p class="card-location">📍 ${mission.location}</p>
-                        ${mission.lat && mission.lng ? `
-                            <p class="card-coords">${mission.lat.toFixed(4)}, ${mission.lng.toFixed(4)}</p>
-                        ` : ''}
+                        ${(mission.lat && mission.lng) ? `<p class="card-coords">${mission.lat.toFixed(4)}, ${mission.lng.toFixed(4)}</p>` : ''}
                         <p class="card-description">${mission.description}</p>
                         <div class="card-footer">
                             <div class="card-date">${statusText === 'Explored' ? '✅' : '📌'}</div>
-                            <button class="btn-small view-btn" type="button" data-id="${mission._id}">View</button>
+                            <div class="card-actions">
+                                <button class="btn-small view-btn" type="button" data-id="${mission._id}">View</button>
+                                <button class="btn-small maps maps-btn" type="button" data-lat="${mission.lat}" data-lng="${mission.lng}">Maps</button>
+                            </div>
                         </div>
                     </div>
                 `;
+
                 container.appendChild(card);
             });
 
@@ -2073,27 +1828,18 @@
         }
 
         async function showMissionDetail(id) {
-            console.log('🔍 Showing mission detail for ID:', id);
             const mission = missions.find(m => m._id === id);
-            if (!mission) {
-                console.error('❌ Mission not found for ID:', id);
-                return;
-            }
+            if (!mission) return;
 
             currentDetailMissionId = id;
 
-            let statusText = '';
-            switch(mission.status) {
-                case 'planned': statusText = 'To Explore'; break;
-                case 'completed': statusText = 'Explored'; break;
-            }
+            let statusText = mission.status === 'planned' ? 'To Explore' : 'Explored';
 
             document.getElementById('detail-title').textContent = mission.name;
 
             let alternativeSpotsHTML = '';
             if (mission.alternativeSpots && mission.alternativeSpots.length > 0) {
                 const alternativeSpots = missions.filter(m => mission.alternativeSpots.includes(m._id));
-
                 if (alternativeSpots.length > 0) {
                     alternativeSpotsHTML = `
                         <div class="detail-section">
@@ -2117,21 +1863,21 @@
                 }
             }
 
-            // ✅ foto: aggiungo SEMPRE per prima la preview satellitare
-            const satellite = (mission.lat && mission.lng)
+            const satelliteLarge = (mission.lat && mission.lng)
                 ? getSatelliteSnapshotUrl(mission.lat, mission.lng, 19, 1200, 800)
-                : null;
-
-            const photos = [
-                satellite,
-                ...(mission.photos || []).map(p => resolveUrl(p))
-            ].filter(Boolean);
+                : '';
 
             document.getElementById('detail-body').innerHTML = `
                 <div class="detail-container">
                     <div class="detail-header">
                         <h1 class="detail-title">${mission.name}</h1>
                         <div class="detail-subtitle">📍 ${mission.location}</div>
+
+                        ${(mission.lat && mission.lng) ? `
+                        <div class="detail-satellite">
+                            <img src="${satelliteLarge}" alt="Satellite view">
+                        </div>
+                        ` : ''}
                     </div>
 
                     <div class="detail-grid">
@@ -2151,29 +1897,17 @@
                             ` : ''}
 
                             ${alternativeSpotsHTML}
-
-                            ${photos.length > 0 ? `
-                            <div class="detail-section">
-                                <h3>Photos</h3>
-                                <div class="gallery">
-                                    ${photos.map((photo, i) => `
-                                        <div class="gallery-item">
-                                            <img src="${photo}" alt="Photo ${i + 1}" data-photo="${photo}">
-                                        </div>
-                                    `).join('')}
-                                </div>
-                            </div>
-                            ` : ''}
                         </div>
 
                         <div>
-                            ${mission.lat && mission.lng ? `
+                            ${(mission.lat && mission.lng) ? `
                             <div class="detail-section">
                                 <h3>Location</h3>
                                 <div class="detail-map" id="detail-map"></div>
                                 <p style="margin-top: 0.5rem; font-size: 0.75rem; color: var(--text-dim); text-align: center; font-family: monospace;">
                                     ${mission.lat.toFixed(6)}, ${mission.lng.toFixed(6)}
                                 </p>
+
                                 <button class="btn" type="button" style="width: 100%; margin-top: 1rem;" id="open-maps-btn">
                                     <i class="fas fa-external-link-alt"></i> Open in Maps
                                 </button>
@@ -2216,20 +1950,21 @@
                 });
             });
 
-            document.querySelectorAll('.gallery-item img').forEach(img => {
-                onTap(img, () => viewPhoto(img.dataset.photo), { preventDefault: false });
-            });
-
             onTap(document.getElementById('edit-btn'), () => editMission(mission._id));
             onTap(document.getElementById('delete-btn'), () => deleteSpot(mission._id));
 
-            onTap(document.getElementById('open-maps-btn'), () => {
-                openInGoogleMaps(mission.lat, mission.lng);
-            });
+            const mapsBtn = document.getElementById('open-maps-btn');
+            if (mapsBtn) onTap(mapsBtn, () => openInGoogleMaps(mission.lat, mission.lng));
 
             if (mission.lat && mission.lng) {
                 setTimeout(() => {
-                    const detailMap = L.map('detail-map').setView([mission.lat, mission.lng], 18);
+                    const detailMap = L.map('detail-map', {
+                        zoomControl: true,
+                        dragging: true,
+                        scrollWheelZoom: true,
+                        doubleClickZoom: true,
+                        touchZoom: true
+                    }).setView([mission.lat, mission.lng], 18);
 
                     L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
                         attribution: 'Tiles © Esri — Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community',
@@ -2238,19 +1973,10 @@
 
                     const marker = L.marker([mission.lat, mission.lng]).addTo(detailMap);
                     detailMap.fitBounds(marker.getBounds());
-                }, 100);
+                }, 120);
             }
 
             document.getElementById('detail-modal').style.display = 'flex';
-        }
-
-        function openInGoogleMaps(lat, lng) {
-            window.open(`https://www.google.com/maps?q=${lat},${lng}`, '_blank');
-        }
-
-        function viewPhoto(url) {
-            document.getElementById('viewer-image').src = resolveUrl(url);
-            document.getElementById('photo-viewer').style.display = 'flex';
         }
 
         async function editMission(id) {
@@ -2262,25 +1988,17 @@
 
             await loadSpotsForSelection();
 
-            uploadedPhotos = (mission.photos || []).map((url, index) => ({
-                id: index,
-                dataUrl: resolveUrl(url),
-                file: null
-            }));
-
             if (isMobile) {
                 document.getElementById('mobile-form-title').textContent = 'Edit Spot';
                 document.getElementById('mobile-mission-name').value = mission.name;
                 document.getElementById('mobile-mission-location').value = mission.location;
                 document.getElementById('mobile-mission-status').value = mission.status;
-                document.getElementById('mobile-mission-coords').value = mission.lat && mission.lng ? `${mission.lat},${mission.lng}` : '';
+                document.getElementById('mobile-mission-coords').value = (mission.lat && mission.lng) ? `${mission.lat},${mission.lng}` : '';
                 document.getElementById('mobile-mission-desc').value = mission.description;
                 document.getElementById('mobile-mission-plan-a').value = mission.planA || '';
                 document.getElementById('mobile-alternative-spots-input').value = JSON.stringify(selectedAlternativeSpots);
 
                 updateAlternativeSpotsUI('mobile-alternative-spots-container', selectedAlternativeSpots, id);
-                renderPhotoPreview(document.getElementById('mobile-photo-preview'));
-
                 closeDetailModal();
                 showMobileForm();
             } else {
@@ -2288,14 +2006,12 @@
                 document.getElementById('mission-name').value = mission.name;
                 document.getElementById('mission-location').value = mission.location;
                 document.getElementById('mission-status').value = mission.status;
-                document.getElementById('mission-coords').value = mission.lat && mission.lng ? `${mission.lat},${mission.lng}` : '';
+                document.getElementById('mission-coords').value = (mission.lat && mission.lng) ? `${mission.lat},${mission.lng}` : '';
                 document.getElementById('mission-desc').value = mission.description;
                 document.getElementById('mission-plan-a').value = mission.planA || '';
                 document.getElementById('alternative-spots-input').value = JSON.stringify(selectedAlternativeSpots);
 
                 updateAlternativeSpotsUI('alternative-spots-container', selectedAlternativeSpots, id);
-                renderPhotoPreview(document.getElementById('photo-preview'));
-
                 closeDetailModal();
                 document.getElementById('mission-modal').style.display = 'flex';
             }
@@ -2303,7 +2019,6 @@
 
         async function showAddMissionModal() {
             editingMissionId = null;
-            uploadedPhotos = [];
             selectedAlternativeSpots = [];
 
             await loadSpotsForSelection();
@@ -2313,14 +2028,11 @@
             document.getElementById('alternative-spots-input').value = '';
 
             updateAlternativeSpotsUI('alternative-spots-container', []);
-            renderPhotoPreview(document.getElementById('photo-preview'));
-
             document.getElementById('mission-modal').style.display = 'flex';
         }
 
         async function showMobileAddForm() {
             editingMissionId = null;
-            uploadedPhotos = [];
             selectedAlternativeSpots = [];
 
             await loadSpotsForSelection();
@@ -2330,8 +2042,6 @@
             document.getElementById('mobile-alternative-spots-input').value = '';
 
             updateAlternativeSpotsUI('mobile-alternative-spots-container', []);
-            renderPhotoPreview(document.getElementById('mobile-photo-preview'));
-
             showMobileForm();
         }
 
@@ -2344,7 +2054,6 @@
         function hideMobileForm() {
             document.getElementById('mobile-form-page').style.display = 'none';
             document.body.style.overflow = 'auto';
-            uploadedPhotos = [];
             selectedAlternativeSpots = [];
         }
 
@@ -2378,8 +2087,7 @@
                 saveBtn.disabled = true;
 
                 try {
-                    const coordsInput = document.getElementById('mobile-mission-coords').value;
-                    const coords = parseCoordinates(coordsInput);
+                    const coords = parseCoordinates(document.getElementById('mobile-mission-coords').value);
                     if (!coords) throw new Error('Please enter valid coordinates (e.g., 45.4642,9.1900)');
 
                     const spotData = {
@@ -2410,7 +2118,6 @@
         }
 
         document.addEventListener('DOMContentLoaded', async () => {
-            setupPhotoUpload();
             setupMobileLayout();
 
             document.querySelectorAll('.nav-item').forEach(item => {
@@ -2422,27 +2129,19 @@
 
             onTap(document.getElementById('close-modal'), () => {
                 document.getElementById('mission-modal').style.display = 'none';
-                uploadedPhotos = [];
                 selectedAlternativeSpots = [];
             });
 
             onTap(document.getElementById('close-detail'), closeDetailModal);
 
-            onTap(document.getElementById('close-viewer'), () => {
-                document.getElementById('photo-viewer').style.display = 'none';
-            });
-
             onTap(document.getElementById('cancel-btn'), () => {
                 document.getElementById('mission-modal').style.display = 'none';
-                uploadedPhotos = [];
                 selectedAlternativeSpots = [];
             });
 
-            // chiudi modal cliccando fuori (click è sufficiente su mobile)
             document.getElementById('mission-modal')?.addEventListener('click', (e) => {
                 if (e.target === document.getElementById('mission-modal')) {
                     document.getElementById('mission-modal').style.display = 'none';
-                    uploadedPhotos = [];
                     selectedAlternativeSpots = [];
                 }
             });
@@ -2450,12 +2149,6 @@
             document.getElementById('detail-modal')?.addEventListener('click', (e) => {
                 if (e.target === document.getElementById('detail-modal')) {
                     closeDetailModal();
-                }
-            });
-
-            document.getElementById('photo-viewer')?.addEventListener('click', (e) => {
-                if (e.target === document.getElementById('photo-viewer')) {
-                    document.getElementById('photo-viewer').style.display = 'none';
                 }
             });
 
@@ -2468,8 +2161,7 @@
                 saveBtn.disabled = true;
 
                 try {
-                    const coordsInput = document.getElementById('mission-coords').value;
-                    const coords = parseCoordinates(coordsInput);
+                    const coords = parseCoordinates(document.getElementById('mission-coords').value);
                     if (!coords) throw new Error('Please enter valid coordinates (e.g., 45.4642,9.1900)');
 
                     const spotData = {
@@ -2489,7 +2181,6 @@
 
                     await saveSpot(spotData);
                     document.getElementById('mission-modal').style.display = 'none';
-                    uploadedPhotos = [];
                     selectedAlternativeSpots = [];
                 } catch (error) {
                     console.error('Save error:', error);
@@ -2500,13 +2191,9 @@
                 }
             });
 
-            console.log('🚀 Starting application...');
-
             await fetchSpots();
             await loadSpotsForSelection();
             initMap();
-
-            console.log('✅ Application started successfully!');
 
             setInterval(fetchSpots, 30000);
 
