@@ -30,7 +30,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 // ===============================
 // 👉 Incolla qui la tua URI (quella del "primo codice") se NON vuoi usare ENV.
 // ⚠️ NON incollare password in chat: mettila qui nel tuo file locale o in ENV del provider.
-const DEFAULT_MONGODB_URI = ''; // <-- INCOLLA QUI la tua URI mongodb+srv://...
+const DEFAULT_MONGODB_URI = 'mongodb+srv://terrilegiacomo_db_user:Prova019283@urbex-hud-db.okizzoq.mongodb.net/urbex-hud?retryWrites=true&w=majority&appName=urbex-hud-db'; // <-- INCOLLA QUI la tua URI mongodb+srv://...
 
 const MONGODB_URI = process.env.MONGODB_URI || DEFAULT_MONGODB_URI;
 
