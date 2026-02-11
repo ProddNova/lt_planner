@@ -352,7 +352,7 @@
         .card-image {
             width: 100%;
             height: 100%;
-            object-fit: contain;
+            object-fit: cover; /* ✅ meglio per preview satellitare */
             background: var(--bg-primary);
         }
 
@@ -1049,7 +1049,10 @@
                 width: calc(100% + 2rem);
             }
             .form-grid { grid-template-columns: 1fr; gap: 1rem; }
-            .modal-overlay { display: none !important; }
+
+            /* ✅ FIX: su mobile NON nascondo tutti i modal, ma SOLO quello di ADD/EDIT desktop */
+            #mission-modal { display: none !important; }
+
             .gallery { grid-template-columns: repeat(2, 1fr); }
             .gallery-item img { height: 150px; }
             .action-buttons { flex-direction: column; }
@@ -1424,6 +1427,84 @@
         let isMobile = window.matchMedia('(max-width: 1024px)').matches;
         let selectedAlternativeSpots = [];
 
+        // =========================
+        // ✅ TAP FIX (MOBILE SAFE)
+        // =========================
+        const SUPPORTS_POINTER = 'PointerEvent' in window;
+        const TAP_GUARD_MS = 700;
+        let lastTouchTime = 0;
+
+        function onTap(el, handler, { preventDefault = true, stopPropagation = false } = {}) {
+            if (!el) return;
+
+            const wrapped = (e) => {
+                if (preventDefault) e.preventDefault();
+                if (stopPropagation) e.stopPropagation();
+                handler(e);
+            };
+
+            const clickHandler = (e) => {
+                // blocco il "ghost click" dopo un tap touch
+                if (Date.now() - lastTouchTime < TAP_GUARD_MS) return;
+                wrapped(e);
+            };
+
+            if (SUPPORTS_POINTER) {
+                el.addEventListener('pointerup', (e) => {
+                    // su desktop (mouse) lascio gestire a click per evitare doppio trigger
+                    if (e.pointerType === 'mouse' || e.pointerType === 'pen') return;
+                    lastTouchTime = Date.now();
+                    wrapped(e);
+                });
+            } else {
+                el.addEventListener('touchend', (e) => {
+                    lastTouchTime = Date.now();
+                    wrapped(e);
+                }, { passive: false });
+            }
+
+            el.addEventListener('click', clickHandler);
+        }
+
+        // =========================================
+        // ✅ SATELLITE STATIC (NO API KEY) - ESRI
+        // =========================================
+        const satelliteCache = new Map();
+
+        function latLngToWebMercator(lat, lng) {
+            const x = lng * 20037508.34 / 180;
+            let y = Math.log(Math.tan((90 + lat) * Math.PI / 360)) / (Math.PI / 180);
+            y = y * 20037508.34 / 180;
+            return { x, y };
+        }
+
+        function buildEsriStaticImage(lat, lng, zoom = 19, width = 900, height = 500) {
+            // calcolo bbox in EPSG:3857 basato su zoom (m/px)
+            const { x, y } = latLngToWebMercator(lat, lng);
+            const initialRes = 156543.03392804097; // m/px @ zoom 0
+            const res = initialRes / Math.pow(2, zoom);
+
+            const halfW = (width / 2) * res;
+            const halfH = (height / 2) * res;
+
+            const bbox = `${x - halfW},${y - halfH},${x + halfW},${y + halfH}`;
+
+            return `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/export` +
+                   `?bbox=${encodeURIComponent(bbox)}` +
+                   `&bboxSR=3857&imageSR=3857` +
+                   `&size=${width},${height}` +
+                   `&format=jpg&f=image`;
+        }
+
+        function getSatelliteSnapshotUrl(lat, lng, zoom = 19, width = 900, height = 500) {
+            const key = `${lat.toFixed(6)},${lng.toFixed(6)}|${zoom}|${width}x${height}`;
+            if (satelliteCache.has(key)) return satelliteCache.get(key);
+
+            const url = buildEsriStaticImage(lat, lng, zoom, width, height);
+            satelliteCache.set(key, url);
+            return url;
+        }
+
         // ✅ Risolve URL foto: se è relativa (/uploads/...) la rende assoluta
         function resolveUrl(url) {
             if (!url) return url;
@@ -1546,12 +1627,12 @@
                     <span class="alternative-spot-status ${spot.status}">${spot.status === 'planned' ? 'To Explore' : 'Explored'}</span>
                 `;
 
-                // ✅ toggle robusto: click su tutta la riga
-                item.addEventListener('pointerup', (e) => {
+                // ✅ toggle robusto: tap su tutta la riga (mobile-safe)
+                onTap(item, (e) => {
                     const checkbox = item.querySelector('input[type="checkbox"]');
                     if (e.target !== checkbox) checkbox.checked = !checkbox.checked;
                     toggleAlternativeSpot(spot._id, containerId, checkbox.checked);
-                });
+                }, { preventDefault: false });
 
                 container.appendChild(item);
             });
@@ -1561,7 +1642,6 @@
             if (isChecked) {
                 if (selectedAlternativeSpots.length >= 3) {
                     showMessage('Maximum 3 alternative spots allowed', 'error');
-                    // rimetto false
                     const checkbox = document.querySelector(`#${containerId} input[data-id="${spotId}"]`);
                     if (checkbox) checkbox.checked = false;
                     return;
@@ -1598,13 +1678,13 @@
             });
 
             previewContainer.querySelectorAll('.remove-photo').forEach(btn => {
-                btn.addEventListener('pointerup', (e) => {
+                onTap(btn, (e) => {
                     e.preventDefault();
                     e.stopPropagation();
                     const index = parseInt(btn.getAttribute('data-index'), 10);
                     uploadedPhotos.splice(index, 1);
                     renderPhotoPreview(previewContainer);
-                });
+                }, { preventDefault: true, stopPropagation: true });
             });
         }
 
@@ -1613,14 +1693,14 @@
             const previewContainer = document.getElementById('photo-preview');
             const browseBtn = document.getElementById('browse-photos');
 
-            if (browseBtn) browseBtn.addEventListener('pointerup', () => fileInput.click());
+            if (browseBtn) onTap(browseBtn, () => fileInput.click());
             if (fileInput) fileInput.addEventListener('change', (e) => handleFiles(e, previewContainer));
 
             const mobileDropArea = document.getElementById('mobile-photo-drop-area');
             const mobileFileInput = document.getElementById('mobile-photo-input');
             const mobilePreviewContainer = document.getElementById('mobile-photo-preview');
 
-            if (mobileDropArea) mobileDropArea.addEventListener('pointerup', () => mobileFileInput.click());
+            if (mobileDropArea) onTap(mobileDropArea, () => mobileFileInput.click());
             if (mobileFileInput) mobileFileInput.addEventListener('change', (e) => handleFiles(e, mobilePreviewContainer));
 
             function handleFiles(e, targetPreview) {
@@ -1654,22 +1734,22 @@
             }
 
             // pulizia
-            document.getElementById('close-modal')?.addEventListener('pointerup', () => {
+            onTap(document.getElementById('close-modal'), () => {
                 uploadedPhotos = [];
                 renderPhotoPreview(previewContainer);
             });
 
-            document.getElementById('cancel-btn')?.addEventListener('pointerup', () => {
+            onTap(document.getElementById('cancel-btn'), () => {
                 uploadedPhotos = [];
                 renderPhotoPreview(previewContainer);
             });
 
-            document.getElementById('close-mobile-form')?.addEventListener('pointerup', () => {
+            onTap(document.getElementById('close-mobile-form'), () => {
                 uploadedPhotos = [];
                 renderPhotoPreview(mobilePreviewContainer);
             });
 
-            document.getElementById('mobile-cancel-btn')?.addEventListener('pointerup', () => {
+            onTap(document.getElementById('mobile-cancel-btn'), () => {
                 uploadedPhotos = [];
                 renderPhotoPreview(mobilePreviewContainer);
             });
@@ -1703,7 +1783,7 @@
                         <button class="btn" type="button" id="retry-btn" style="margin-top: 1rem;">Retry</button>
                     </div>
                 `;
-                document.getElementById('retry-btn')?.addEventListener('pointerup', fetchSpots);
+                onTap(document.getElementById('retry-btn'), fetchSpots);
                 return [];
             }
         }
@@ -1725,7 +1805,6 @@
                 if (!response.ok) throw new Error('Photo upload failed');
                 const data = await response.json();
 
-                // ✅ adesso il backend restituisce path relativi (/uploads/...)
                 return (data.urls || []).map(u => resolveUrl(u));
             } catch (error) {
                 console.error('Error uploading photos:', error);
@@ -1738,7 +1817,6 @@
                 if (uploadedPhotos.length > 0) {
                     const photoUrls = await uploadPhotos();
                     spotData.photos = photoUrls.map(u => {
-                        // salvo RELATIVO se possibile (se è origin+ /uploads)
                         if (u.startsWith(ORIGIN + '/uploads/')) return u.replace(ORIGIN, '');
                         return u;
                     });
@@ -1810,9 +1888,10 @@
             if (map) return;
             map = L.map('map').setView([45.4642, 9.1900], 6);
 
-            L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
-                attribution: '© Google Maps',
-                maxZoom: 20
+            // ✅ SATELLITE FREE (Esri World Imagery) - NO API KEY
+            L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                attribution: 'Tiles © Esri — Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community',
+                maxZoom: 19
             }).addTo(map);
 
             updateMap();
@@ -1852,11 +1931,11 @@
                 }
             });
 
-            // ✅ popup button click robusto
+            // ✅ popup button click mobile-safe
             map?.on('popupopen', (e) => {
                 const btn = e.popup.getElement()?.querySelector('.open-detail-btn');
                 if (btn) {
-                    btn.addEventListener('pointerup', () => showMissionDetail(btn.dataset.id));
+                    onTap(btn, () => showMissionDetail(btn.dataset.id));
                 }
             });
 
@@ -1905,29 +1984,28 @@
             if (!container) return;
 
             container.replaceWith(container.cloneNode(true));
-            // riprendo nuovo riferimento dopo clone
             const newContainer = document.getElementById('missions-container');
 
             const handler = (e) => {
                 const btn = e.target.closest('.view-btn');
                 const card = e.target.closest('.card');
 
-                // se clicchi su View
                 if (btn) {
                     const id = btn.dataset.id;
                     if (id) showMissionDetail(id);
                     return;
                 }
 
-                // se clicchi sulla card (non su altri bottoni)
                 if (card) {
                     const id = card.dataset.id;
                     if (id) showMissionDetail(id);
                 }
             };
 
-            newContainer.addEventListener('pointerup', handler);
+            // ✅ qui click è sufficiente su mobile; pointerup resta su browser che lo supportano
             newContainer.addEventListener('click', handler);
+            if (SUPPORTS_POINTER) newContainer.addEventListener('pointerup', handler);
+            else newContainer.addEventListener('touchend', handler, { passive: true });
         }
 
         function renderMissions() {
@@ -1943,7 +2021,7 @@
                     </div>
                 `;
 
-                document.getElementById('add-first-btn')?.addEventListener('pointerup', () => {
+                onTap(document.getElementById('add-first-btn'), () => {
                     if (isMobile) showMobileAddForm();
                     else showAddMissionModal();
                 });
@@ -1955,7 +2033,7 @@
             missions.forEach(mission => {
                 const card = document.createElement('div');
                 card.className = 'card touch-optimized';
-                card.dataset.id = mission._id; // ✅ fondamentale
+                card.dataset.id = mission._id;
 
                 let statusText = '', statusClass = '';
                 switch(mission.status) {
@@ -1963,9 +2041,10 @@
                     case 'completed': statusText = 'Explored'; statusClass = 'badge-completed'; break;
                 }
 
-                const mainPhoto = (mission.photos && mission.photos.length > 0)
-                    ? resolveUrl(mission.photos[0])
-                    : 'https://images.unsplash.com/photo-1519681393784-d120267933ba?w=800&q=80';
+                // ✅ cover: satellite static sulle coordinate (anche vecchi spot)
+                const mainPhoto = (mission.lat && mission.lng)
+                    ? getSatelliteSnapshotUrl(mission.lat, mission.lng, 19, 900, 500)
+                    : (mission.photos && mission.photos.length > 0 ? resolveUrl(mission.photos[0]) : '');
 
                 card.innerHTML = `
                     <div class="card-image-container">
@@ -2038,7 +2117,15 @@
                 }
             }
 
-            const photos = (mission.photos || []).map(p => resolveUrl(p));
+            // ✅ foto: aggiungo SEMPRE per prima la preview satellitare
+            const satellite = (mission.lat && mission.lng)
+                ? getSatelliteSnapshotUrl(mission.lat, mission.lng, 19, 1200, 800)
+                : null;
+
+            const photos = [
+                satellite,
+                ...(mission.photos || []).map(p => resolveUrl(p))
+            ].filter(Boolean);
 
             document.getElementById('detail-body').innerHTML = `
                 <div class="detail-container">
@@ -2122,31 +2209,31 @@
                 </div>
             `;
 
-            // listeners detail
             document.querySelectorAll('.alternative-spot-link').forEach(a => {
-                a.addEventListener('pointerup', (e) => {
+                onTap(a, (e) => {
                     e.preventDefault();
                     showMissionDetail(a.dataset.id);
                 });
             });
 
             document.querySelectorAll('.gallery-item img').forEach(img => {
-                img.addEventListener('pointerup', () => viewPhoto(img.dataset.photo));
+                onTap(img, () => viewPhoto(img.dataset.photo), { preventDefault: false });
             });
 
-            document.getElementById('edit-btn')?.addEventListener('pointerup', () => editMission(mission._id));
-            document.getElementById('delete-btn')?.addEventListener('pointerup', () => deleteSpot(mission._id));
+            onTap(document.getElementById('edit-btn'), () => editMission(mission._id));
+            onTap(document.getElementById('delete-btn'), () => deleteSpot(mission._id));
 
-            document.getElementById('open-maps-btn')?.addEventListener('pointerup', () => {
+            onTap(document.getElementById('open-maps-btn'), () => {
                 openInGoogleMaps(mission.lat, mission.lng);
             });
 
             if (mission.lat && mission.lng) {
                 setTimeout(() => {
-                    const detailMap = L.map('detail-map').setView([mission.lat, mission.lng], 15);
-                    L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
-                        attribution: '© Google Maps',
-                        maxZoom: 20
+                    const detailMap = L.map('detail-map').setView([mission.lat, mission.lng], 18);
+
+                    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                        attribution: 'Tiles © Esri — Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community',
+                        maxZoom: 19
                     }).addTo(detailMap);
 
                     const marker = L.marker([mission.lat, mission.lng]).addTo(detailMap);
@@ -2175,7 +2262,6 @@
 
             await loadSpotsForSelection();
 
-            // ✅ carico foto già presenti come “uploadedPhotos” (senza file)
             uploadedPhotos = (mission.photos || []).map((url, index) => ({
                 id: index,
                 dataUrl: resolveUrl(url),
@@ -2272,16 +2358,16 @@
             document.getElementById('mobile-stats').style.display = currentView === 'missions' ? 'grid' : 'none';
 
             document.querySelectorAll('.bottom-nav-item').forEach(item => {
-                item.addEventListener('pointerup', (e) => {
+                onTap(item, (e) => {
                     e.preventDefault();
                     switchView(item.dataset.view);
                 });
             });
 
-            document.getElementById('mobile-add-btn')?.addEventListener('pointerup', showMobileAddForm);
-            document.getElementById('close-mobile-form')?.addEventListener('pointerup', hideMobileForm);
-            document.getElementById('mobile-cancel-btn')?.addEventListener('pointerup', hideMobileForm);
-            document.getElementById('mobile-get-current-location')?.addEventListener('pointerup', getCurrentLocation);
+            onTap(document.getElementById('mobile-add-btn'), showMobileAddForm);
+            onTap(document.getElementById('close-mobile-form'), hideMobileForm);
+            onTap(document.getElementById('mobile-cancel-btn'), hideMobileForm);
+            onTap(document.getElementById('mobile-get-current-location'), getCurrentLocation);
 
             document.getElementById('mobile-mission-form')?.addEventListener('submit', async (e) => {
                 e.preventDefault();
@@ -2328,31 +2414,32 @@
             setupMobileLayout();
 
             document.querySelectorAll('.nav-item').forEach(item => {
-                item.addEventListener('pointerup', () => switchView(item.dataset.view));
+                onTap(item, () => switchView(item.dataset.view), { preventDefault: false });
             });
 
-            document.getElementById('add-mission-btn')?.addEventListener('pointerup', showAddMissionModal);
-            document.getElementById('get-current-location')?.addEventListener('pointerup', getCurrentLocation);
+            onTap(document.getElementById('add-mission-btn'), showAddMissionModal);
+            onTap(document.getElementById('get-current-location'), getCurrentLocation);
 
-            document.getElementById('close-modal')?.addEventListener('pointerup', () => {
+            onTap(document.getElementById('close-modal'), () => {
                 document.getElementById('mission-modal').style.display = 'none';
                 uploadedPhotos = [];
                 selectedAlternativeSpots = [];
             });
 
-            document.getElementById('close-detail')?.addEventListener('pointerup', closeDetailModal);
+            onTap(document.getElementById('close-detail'), closeDetailModal);
 
-            document.getElementById('close-viewer')?.addEventListener('pointerup', () => {
+            onTap(document.getElementById('close-viewer'), () => {
                 document.getElementById('photo-viewer').style.display = 'none';
             });
 
-            document.getElementById('cancel-btn')?.addEventListener('pointerup', () => {
+            onTap(document.getElementById('cancel-btn'), () => {
                 document.getElementById('mission-modal').style.display = 'none';
                 uploadedPhotos = [];
                 selectedAlternativeSpots = [];
             });
 
-            document.getElementById('mission-modal')?.addEventListener('pointerup', (e) => {
+            // chiudi modal cliccando fuori (click è sufficiente su mobile)
+            document.getElementById('mission-modal')?.addEventListener('click', (e) => {
                 if (e.target === document.getElementById('mission-modal')) {
                     document.getElementById('mission-modal').style.display = 'none';
                     uploadedPhotos = [];
@@ -2360,13 +2447,13 @@
                 }
             });
 
-            document.getElementById('detail-modal')?.addEventListener('pointerup', (e) => {
+            document.getElementById('detail-modal')?.addEventListener('click', (e) => {
                 if (e.target === document.getElementById('detail-modal')) {
                     closeDetailModal();
                 }
             });
 
-            document.getElementById('photo-viewer')?.addEventListener('pointerup', (e) => {
+            document.getElementById('photo-viewer')?.addEventListener('click', (e) => {
                 if (e.target === document.getElementById('photo-viewer')) {
                     document.getElementById('photo-viewer').style.display = 'none';
                 }
