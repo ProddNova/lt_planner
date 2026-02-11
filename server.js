@@ -6,6 +6,9 @@ const fs = require('fs');
 const multer = require('multer');
 const sharp = require('sharp');
 
+// ✅ Carica env se presente (locale). In produzione (Render) usa Environment Variables.
+try { require('dotenv').config(); } catch (e) {}
+
 const app = express();
 
 // ✅ IMPORTANTISSIMO se deploy dietro proxy (Render, Nginx, ecc.)
@@ -19,10 +22,13 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(express.static(__dirname));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// ✅ STRINGA DI CONNESSIONE
-const MONGODB_URI = 'mongodb+srv://terrilegiacomo_db_user:Prova019283@urbex-hud-db.okizzoq.mongodb.net/urbex-hud?retryWrites=true&w=majority&appName=urbex-hud-db';
+// ✅ STRINGA DI CONNESSIONE (mettila in ENV!)
+const MONGODB_URI = process.env.MONGODB_URI;
 
 console.log('🔧 Tentativo di connessione MongoDB...');
+if (!MONGODB_URI) {
+    console.warn('⚠️  MONGODB_URI non impostata. Impostala come variabile d\'ambiente (MONGODB_URI).');
+}
 
 // ✅ Assicurati che uploads esista sempre
 const uploadsDir = path.join(__dirname, 'uploads');
@@ -197,13 +203,11 @@ app.delete('/api/spots/:id', async (req, res) => {
         // ✅ elimina anche optimized e thumb
         if (spot.photos && spot.photos.length > 0) {
             spot.photos.forEach(photoUrl => {
-                // photoUrl può essere "/uploads/optimized-xxx.jpg" oppure "http..."
                 const basename = path.basename(photoUrl);
                 const filePath = path.join(__dirname, 'uploads', basename);
 
                 safeUnlink(filePath);
 
-                // se è optimized-xxx.jpg, prova anche thumb-xxx.jpg
                 if (basename.startsWith('optimized-')) {
                     const originalName = basename.replace(/^optimized-/, '');
                     safeUnlink(path.join(__dirname, 'uploads', originalName));
@@ -292,17 +296,14 @@ app.post('/api/upload', upload.array('photos', 5), async (req, res) => {
                     .jpeg({ quality: 80 })
                     .toFile(thumbOut);
 
-                // ✅ FIX: salva URL RELATIVO (non dipende da host/protocol/porta)
                 photoUrls.push(`/uploads/${optimizedFilename}`);
 
-                // pulisco file temporaneo originale (se non è già stato rimosso)
                 if (processedFilePath && fs.existsSync(processedFilePath)) {
                     safeUnlink(processedFilePath);
                 }
 
             } catch (error) {
                 console.error('Error processing image:', error);
-                // fallback relativo
                 photoUrls.push(`/uploads/${file.filename}`);
             }
         }
@@ -494,6 +495,8 @@ async function connectToDatabase() {
     try {
         console.log('🔄 Connessione a MongoDB Atlas...');
 
+        if (!MONGODB_URI) throw new Error('MONGODB_URI missing');
+
         const options = {
             useNewUrlParser: true,
             useUnifiedTopology: true,
@@ -517,7 +520,6 @@ async function connectToDatabase() {
         console.log('1. Controlla MongoDB Atlas > Network Access > IP 0.0.0.0/0');
         console.log('2. Controlla che la password sia corretta');
         console.log('3. Controlla che l\'utente abbia permessi');
-        console.log('4. Stringa usata:', MONGODB_URI.replace(/Prova019283/, '***'));
         return false;
     }
 }
